@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Order Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2rem);
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
+      --shadow-md: 0 10px 24px rgba(0,0,0,.25);
+      --color-bg: #000000;
+      --color-surface: #07090c;
+      --color-surface-2: #101319;
+      --color-surface-3: #181d24;
+      --color-border: rgba(255,255,255,0.1);
+      --color-divider: rgba(255,255,255,0.08);
+      --color-text: #f3f5f7;
+      --color-text-muted: #b9c0c8;
+      --color-text-faint: #8f98a2;
+      --color-accent: #58a6ff;
+      --row-red: #8f1b28;
+      --row-yellow: #665216;
+      --row-green: #1f4d34;
+      --row-blue: #203d5f;
+      --row-purple: #443064;
+      --row-gray: #30353b;
+      --focus: #8ab4ff;
+      --font-body: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      color: var(--color-text);
+      background-color: var(--color-bg);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: var(--space-4);
+      padding: var(--space-5);
+    }
+
+    .panel {
+      background: rgba(29,32,35,0.94);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(10px);
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      padding: var(--space-5) var(--space-6);
+      align-items: center;
+      text-align: center;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: var(--text-xl);
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+    }
+
+    .title-block p {
+      margin: var(--space-2) 0 0;
+      color: var(--color-text-muted);
+      max-width: 60ch;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+
+    .stat {
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--color-text-faint);
+      margin-bottom: var(--space-2);
+    }
+
+    .stat-value {
+      font-size: var(--text-lg);
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-4) var(--space-5);
+    }
+
+    .toolbar-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      align-items: center;
+    }
+
+    .chip, .button, .search, select, input, textarea {
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      border-radius: var(--radius-md);
+      min-height: 44px;
+      padding: 0 var(--space-4);
+      font: inherit;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .chip.active {
+      background: rgba(88,166,255,0.18);
+      border-color: rgba(88,166,255,0.4);
+      color: #dcecff;
+    }
+
+    .button {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .button.primary {
+      background: linear-gradient(180deg, #4389e2 0%, #296fc9 100%);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .button.ghost {
+      background: transparent;
+    }
+
+    .search {
+      min-width: 260px;
+    }
+
+    .table-wrap {
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+
+    .table-scroller {
+      overflow: auto;
+      border-radius: var(--radius-xl);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(20,22,24,0.98);
+      color: var(--color-text-muted);
+      text-align: left;
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    tbody td {
+      padding: var(--space-4);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: middle;
+      color: var(--color-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      background: rgba(255,255,255,0.02);
+      transition: background-color 160ms ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    tbody tr.selected {
+      outline: 2px solid rgba(138,180,255,0.55);
+      outline-offset: -2px;
+    }
+
+    .type-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 76px;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      font-size: var(--text-sm);
+      font-weight: 700;
+    }
+
+    .muted { color: var(--color-text-muted); }
+
+    .actions {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: rgba(255,255,255,0.03);
+      color: var(--color-text);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(440px, 100%);
+      height: 100vh;
+      background: rgba(24,27,30,0.98);
+      border-left: 1px solid var(--color-border);
+      box-shadow: var(--shadow-md);
+      transform: translateX(100%);
+      transition: transform 220ms ease;
+      z-index: 20;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-header, .drawer-footer {
+      padding: var(--space-5);
+      border-bottom: 1px solid var(--color-divider);
+    }
+
+    .drawer-footer {
+      border-bottom: 0;
+      border-top: 1px solid var(--color-divider);
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+    }
+
+    .drawer-body {
+      overflow: auto;
+      padding: var(--space-5);
+      display: grid;
+      gap: var(--space-4);
+      align-content: start;
+    }
+
+    .field {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    label {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+
+    textarea {
+      min-height: 110px;
+      padding-top: var(--space-3);
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus, select:focus, .button:focus, .icon-btn:focus, .chip:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .context-menu {
+      position: fixed;
+      min-width: 220px;
+      background: rgba(27,30,34,0.98);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-2);
+      z-index: 30;
+      display: none;
+    }
+
+    .context-menu.open { display: block; }
+
+    .menu-title {
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-faint);
+    }
+
+    .menu-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 0.8rem 0.9rem;
+      border: 0;
+      background: transparent;
+      color: var(--color-text);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+    }
+
+    .menu-item:hover, .menu-item:focus {
+      background: rgba(255,255,255,0.06);
+      outline: none;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.25);
+      flex: 0 0 auto;
+    }
+
+    .hint {
+      color: var(--color-text-faint);
+      font-size: var(--text-sm);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      z-index: 10;
+    }
+
+    .overlay.open { display: block; }
+
+    @media (max-width: 1080px) {
+      .header { grid-template-columns: 1fr; }
+      .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .search { min-width: 100%; }
+      table { min-width: 980px; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to content</a>
+  <div class="app">
+    <header class="panel header">
+      <div class="title-block">
+        <h1>Work Orders Board</h1>
+      </div>
+      <div class="meta" aria-label="Dashboard summary">
+        <div class="stat"><span class="stat-label">Open Jobs</span><span class="stat-value" id="stat-open">0</span></div>
+        <div class="stat"><span class="stat-label">Water</span><span class="stat-value" id="stat-water">0</span></div>
+        <div class="stat"><span class="stat-label">Sewer</span><span class="stat-value" id="stat-sewer">0</span></div>
+        <div class="stat"><span class="stat-label">Archived</span><span class="stat-value" id="stat-archived">0</span></div>
+        <div class="stat"><span class="stat-label">Last Updated</span><span class="stat-value" id="stat-updated">--</span></div>
+      </div>
+    </header>
+
+    <section class="panel toolbar" aria-label="Filters and actions">
+      <div class="toolbar-group" role="group" aria-label="Type filters">
+        <button class="chip active" data-filter-type="all">All</button>
+        <button class="chip" data-filter-type="Water">Water</button>
+        <button class="chip" data-filter-type="Sewer">Sewer</button>
+      </div>
+      <div class="toolbar-group">
+        <input id="searchInput" class="search" type="search" placeholder="Search issue, location, or 811 number" aria-label="Search work orders" />
+        <button class="chip" id="archiveToggleBtn" aria-pressed="false">Show Archive</button>
+        <button class="button ghost" id="clearColorsBtn">Clear Selected Row Color</button>
+        <button class="button ghost" id="exportBtn">Export Data</button>
+        <label class="button ghost" for="importFile" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">Import Data</label>
+        <input id="importFile" type="file" accept="application/json" hidden />
+        <button class="button primary" id="newOrderBtn">+ New Work Order</button>
+      </div>
+    </section>
+
+    <main id="main" class="panel table-wrap">
+      <div class="table-scroller">
+        <table aria-label="Work orders table">
+          <thead>
+            <tr>
+              <th style="width: 9rem;">Type</th>
+              <th style="width: 18rem;">Issue</th>
+              <th style="width: 15rem;">Location</th>
+              <th style="width: 10rem;">Date</th>
+              <th style="width: 11rem;">811 Number</th>
+              <th>Status</th>
+              <th style="width: 15rem;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawerTitle">
+    <div class="drawer-header">
+      <h2 id="drawerTitle" style="margin:0 0 .35rem;font-size:var(--text-lg);">Edit Work Order</h2>
+      <p class="hint" style="margin:0;">Update details here. Right-click the row in the table to set a full-row color.</p>
+    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label for="fieldType">Type</label>
+        <select id="fieldType">
+          <option>Water</option>
+          <option>Sewer</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fieldIssue">Issue</label>
+        <input id="fieldIssue" type="text" />
+      </div>
+      <div class="field">
+        <label for="fieldLocation">Location</label>
+        <input id="fieldLocation" type="text" />
+      </div>
+      <div class="field">
+        <label for="fieldDate">Date</label>
+        <input id="fieldDate" type="date" />
+      </div>
+      <div class="field">
+        <label for="field811">811 Number</label>
+        <input id="field811" type="text" />
+      </div>
+      <div class="field">
+        <label for="fieldStatus">Status</label>
+        <input id="fieldStatus" type="text" />
+      </div>
+      <div class="field">
+        <label for="fieldNotes">Notes</label>
+        <textarea id="fieldNotes"></textarea>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="button ghost" id="cancelBtn">Cancel</button>
+      <button class="button primary" id="saveBtn">Save Changes</button>
+    </div>
+  </aside>
+
+  <div class="context-menu" id="contextMenu" role="menu" aria-label="Row color menu">
+    <div class="menu-title">Row color</div>
+    <button class="menu-item" data-color=""><span class="swatch" style="background: var(--row-gray);"></span>Default</button>
+    <button class="menu-item" data-color="var(--row-red)"><span class="swatch" style="background: var(--row-red);"></span>Red tone</button>
+    <button class="menu-item" data-color="var(--row-yellow)"><span class="swatch" style="background: var(--row-yellow);"></span>Yellow tone</button>
+    <button class="menu-item" data-color="var(--row-green)"><span class="swatch" style="background: var(--row-green);"></span>Green tone</button>
+    <button class="menu-item" data-color="var(--row-blue)"><span class="swatch" style="background: var(--row-blue);"></span>Blue tone</button>
+    <button class="menu-item" data-color="var(--row-purple)"><span class="swatch" style="background: var(--row-purple);"></span>Purple tone</button>
+  </div>
+
+  <script>
+    const workOrders = [
+      { id: 1, type: 'Water', issue: '8-inch main leak', location: 'Pine St & 3rd Ave', date: '2026-08-03', number811: '81124561', status: 'Open', notes: 'Traffic cones placed. Waiting on lane closure.', rowColor: 'var(--row-red)', archived: false },
+      { id: 2, type: 'Sewer', issue: 'Manhole overflow', location: 'Maple Ave Lift Station', date: '2026-08-03', number811: '81124562', status: 'Scheduled', notes: 'Pump truck requested for afternoon.', rowColor: 'var(--row-yellow)', archived: false },
+      { id: 3, type: 'Water', issue: 'Valve inspection', location: 'Well Rd Tank Site', date: '2026-08-02', number811: '81124548', status: 'Planned', notes: 'Routine inspection before weekend work.', rowColor: 'var(--row-green)', archived: false },
+      { id: 4, type: 'Sewer', issue: 'Line backup complaint', location: 'Jefferson Ct', date: '2026-08-01', number811: '81124531', status: 'Open', notes: 'Resident requested callback after service.', rowColor: '', archived: false },
+      { id: 5, type: 'Water', issue: 'Hydrant replacement', location: 'Oak Dr near school', date: '2026-08-04', number811: '81124580', status: 'On Hold', notes: 'Material delivery expected tomorrow morning.', rowColor: '', archived: false }
+    ];
+
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let selectedId = null;
+    let editingId = null;
+    let contextRowId = null;
+    let showArchive = false;
+
+    const tableBody = document.getElementById('tableBody');
+    const chips = [...document.querySelectorAll('[data-filter-type]')];
+    const searchInput = document.getElementById('searchInput');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('overlay');
+    const contextMenu = document.getElementById('contextMenu');
+
+    const fields = {
+      type: document.getElementById('fieldType'),
+      issue: document.getElementById('fieldIssue'),
+      location: document.getElementById('fieldLocation'),
+      date: document.getElementById('fieldDate'),
+      number811: document.getElementById('field811'),
+      status: document.getElementById('fieldStatus'),
+      assignedTo: document.getElementById('fieldAssigned'),
+      notes: document.getElementById('fieldNotes')
+    };
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-');
+      return `${m}/${d}/${y.slice(2)}`;
+    }
+
+    function refreshStats(data) {
+      document.getElementById('stat-open').textContent = data.length;
+      document.getElementById('stat-water').textContent = data.filter(item => item.type === 'Water').length;
+      document.getElementById('stat-sewer').textContent = data.filter(item => item.type === 'Sewer').length;
+      document.getElementById('stat-archived').textContent = workOrders.filter(item => item.archived).length;
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const date = now.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+      document.getElementById('stat-updated').textContent = date + '  ' + time;
+    }
+
+    function getFilteredData() {
+      return workOrders.filter(item => {
+        const typePass = currentFilter === 'all' || item.type === currentFilter;
+        const archivePass = showArchive ? item.archived : !item.archived;
+        const searchBlob = `${item.type} ${item.issue} ${item.location} ${item.number811} ${item.status}`.toLowerCase();
+        const searchPass = !currentSearch || searchBlob.includes(currentSearch);
+        return typePass && archivePass && searchPass;
+      });
+    }
+
+    function renderTable() {
+      const filtered = getFilteredData();
+      refreshStats(filtered);
+      tableBody.innerHTML = '';
+
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = item.id;
+        if (item.rowColor) tr.style.background = `color-mix(in srgb, ${item.rowColor} 82%, #1b1e22)`;
+        if (selectedId === item.id) tr.classList.add('selected');
+        tr.innerHTML = `
+          <td><span class="type-pill">${item.type}</span></td>
+          <td title="${item.issue}">${item.issue}</td>
+          <td title="${item.location}">${item.location}</td>
+          <td class="muted">${formatDate(item.date)}</td>
+          <td>${item.number811}</td>
+          <td title="${item.status}">${item.status}</td>
+          <td>
+            <div class="actions">
+              <button class="icon-btn" aria-label="Edit work order" data-edit="${item.id}">Edit</button>
+              <button class="icon-btn" aria-label="${item.archived ? 'Restore work order' : 'Complete work order'}" data-complete="${item.id}">${item.archived ? 'Restore' : 'Complete'}</button>
+            </div>
+          </td>
+        `;
+
+        tr.addEventListener('click', () => {
+          selectedId = item.id;
+          renderTable();
+        });
+
+        tr.addEventListener('contextmenu', (event) => {
+          event.preventDefault();
+          selectedId = item.id;
+          contextRowId = item.id;
+          renderTable();
+          openContextMenu(event.clientX, event.clientY);
+        });
+
+        tableBody.appendChild(tr);
+      });
+
+      tableBody.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openDrawer(Number(btn.dataset.edit));
+        });
+      });
+
+      tableBody.querySelectorAll('[data-complete]').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const item = workOrders.find(entry => entry.id === Number(btn.dataset.complete));
+          if (!item) return;
+          item.archived = !item.archived;
+          item.status = item.archived ? 'Completed' : 'Open';
+          if (selectedId === item.id && !showArchive && item.archived) selectedId = null;
+          renderTable();
+        });
+      });
+    }
+
+    function openDrawer(id) {
+      editingId = id;
+      const item = workOrders.find(entry => entry.id === id);
+      fields.type.value = item.type;
+      fields.issue.value = item.issue;
+      fields.location.value = item.location;
+      fields.date.value = item.date;
+      fields.number811.value = item.number811;
+      fields.status.value = item.status;
+      fields.notes.value = item.notes;
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      overlay.classList.add('open');
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+      overlay.classList.remove('open');
+      editingId = null;
+    }
+
+    function openContextMenu(x, y) {
+      contextMenu.classList.add('open');
+      const maxX = window.innerWidth - contextMenu.offsetWidth - 12;
+      const maxY = window.innerHeight - contextMenu.offsetHeight - 12;
+      contextMenu.style.left = `${Math.max(12, Math.min(x, maxX))}px`;
+      contextMenu.style.top = `${Math.max(12, Math.min(y, maxY))}px`;
+    }
+
+    function closeContextMenu() {
+      contextMenu.classList.remove('open');
+    }
+
+    function saveCurrentEdit() {
+      if (editingId == null) return;
+      const item = workOrders.find(entry => entry.id === editingId);
+      item.type = fields.type.value;
+      item.issue = fields.issue.value.trim();
+      item.location = fields.location.value.trim();
+      item.date = fields.date.value;
+      item.number811 = fields.number811.value.trim();
+      item.status = fields.status.value.trim();
+      item.notes = fields.notes.value.trim();
+      closeDrawer();
+      renderTable();
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filterType;
+        renderTable();
+      });
+    });
+
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value.toLowerCase().trim();
+      renderTable();
+    });
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(workOrders, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'work-orders-data.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importData(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!Array.isArray(parsed)) throw new Error('Invalid file format');
+          workOrders.length = 0;
+          parsed.forEach(item => workOrders.push({
+            id: Number(item.id) || Date.now() + Math.random(),
+            type: item.type === 'Sewer' ? 'Sewer' : 'Water',
+            issue: item.issue || '',
+            location: item.location || '',
+            date: item.date || new Date().toISOString().slice(0, 10),
+            number811: item.number811 || '',
+            status: item.status || 'Open',
+            assignedTo: item.assignedTo || '',
+            notes: item.notes || '',
+            rowColor: item.rowColor || '',
+            archived: Boolean(item.archived)
+          }));
+          selectedId = null;
+          renderTable();
+        } catch (error) {
+          alert('Could not import file. Please select a valid exported JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+    document.getElementById('importFile').addEventListener('change', (event) => {
+      importData(event.target.files[0]);
+      event.target.value = '';
+    });
+
+    document.getElementById('newOrderBtn').addEventListener('click', () => {
+      const nextId = Math.max(...workOrders.map(item => item.id)) + 1;
+      workOrders.unshift({
+        id: nextId,
+        type: 'Water',
+        issue: 'New work order',
+        location: 'Enter location',
+        date: new Date().toISOString().slice(0, 10),
+        number811: '',
+        status: 'Open',
+        assignedTo: '',
+        notes: '',
+        rowColor: '',
+        archived: false
+      });
+      selectedId = nextId;
+      renderTable();
+      openDrawer(nextId);
+    });
+
+    document.getElementById('archiveToggleBtn').addEventListener('click', () => {
+      showArchive = !showArchive;
+      const btn = document.getElementById('archiveToggleBtn');
+      btn.classList.toggle('active', showArchive);
+      btn.textContent = showArchive ? 'Show Active' : 'Show Archive';
+      btn.setAttribute('aria-pressed', String(showArchive));
+      selectedId = null;
+      renderTable();
+    });
+
+    document.getElementById('clearColorsBtn').addEventListener('click', () => {
+      if (!selectedId) return;
+      const item = workOrders.find(entry => entry.id === selectedId);
+      if (!item) return;
+      item.rowColor = '';
+      renderTable();
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', saveCurrentEdit);
+    document.getElementById('cancelBtn').addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+
+    contextMenu.querySelectorAll('[data-color]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (contextRowId == null) return;
+        const item = workOrders.find(entry => entry.id === contextRowId);
+        item.rowColor = button.dataset.color;
+        closeContextMenu();
+        renderTable();
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!contextMenu.contains(event.target)) closeContextMenu();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeContextMenu();
+        closeDrawer();
+      }
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
