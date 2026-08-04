@@ -432,6 +432,7 @@
         <input id="searchInput" class="search" type="search" placeholder="Search issue, location, or 811 number" aria-label="Search work orders" />
         <button class="chip" id="archiveToggleBtn" aria-pressed="false">Show Archive</button>
         <button class="button ghost" id="clearColorsBtn">Clear Selected Row Color</button>
+        <button class="button primary" id="saveDatabaseBtn">Save</button>
         <button class="button ghost" id="exportBtn">Export Data</button>
         <label class="button ghost" for="importFile" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">Import Data</label>
         <input id="importFile" type="file" accept="application/json" hidden />
@@ -516,7 +517,7 @@
   </div>
 
   <script>
-    const workOrders = [
+    let workOrders = [
       { id: 1, type: 'Water', issue: '8-inch main leak', location: 'Pine St & 3rd Ave', date: '2026-08-03', number811: '81124561', status: 'Open', notes: 'Traffic cones placed. Waiting on lane closure.', rowColor: 'var(--row-red)', archived: false },
       { id: 2, type: 'Sewer', issue: 'Manhole overflow', location: 'Maple Ave Lift Station', date: '2026-08-03', number811: '81124562', status: 'Scheduled', notes: 'Pump truck requested for afternoon.', rowColor: 'var(--row-yellow)', archived: false },
       { id: 3, type: 'Water', issue: 'Valve inspection', location: 'Well Rd Tank Site', date: '2026-08-02', number811: '81124548', status: 'Planned', notes: 'Routine inspection before weekend work.', rowColor: 'var(--row-green)', archived: false },
@@ -531,12 +532,17 @@
     let contextRowId = null;
     let showArchive = false;
 
+    function updateSaveStatus(message) {
+      console.log(message);
+    }
+
     const tableBody = document.getElementById('tableBody');
     const chips = [...document.querySelectorAll('[data-filter-type]')];
     const searchInput = document.getElementById('searchInput');
     const drawer = document.getElementById('drawer');
     const overlay = document.getElementById('overlay');
     const contextMenu = document.getElementById('contextMenu');
+    const saveDatabaseBtn = document.getElementById('saveDatabaseBtn');
 
     const fields = {
       type: document.getElementById('fieldType'),
@@ -545,7 +551,6 @@
       date: document.getElementById('fieldDate'),
       number811: document.getElementById('field811'),
       status: document.getElementById('fieldStatus'),
-      assignedTo: document.getElementById('fieldAssigned'),
       notes: document.getElementById('fieldNotes')
     };
 
@@ -563,7 +568,7 @@
       const now = new Date();
       const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       const date = now.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
-      document.getElementById('stat-updated').textContent = date + '  ' + time;
+      document.getElementById('stat-updated').textContent = date + '  ' + time;
     }
 
     function getFilteredData() {
@@ -640,6 +645,7 @@
     function openDrawer(id) {
       editingId = id;
       const item = workOrders.find(entry => entry.id === id);
+      if (!item) return;
       fields.type.value = item.type;
       fields.issue.value = item.issue;
       fields.location.value = item.location;
@@ -674,6 +680,7 @@
     function saveCurrentEdit() {
       if (editingId == null) return;
       const item = workOrders.find(entry => entry.id === editingId);
+      if (!item) return;
       item.type = fields.type.value;
       item.issue = fields.issue.value.trim();
       item.location = fields.location.value.trim();
@@ -683,6 +690,70 @@
       item.notes = fields.notes.value.trim();
       closeDrawer();
       renderTable();
+    }
+
+    async function loadFromApi() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/work-orders');
+        if (!response.ok) {
+          throw new Error('Failed to load work orders from local API');
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error('API did not return an array');
+        }
+
+        workOrders = data.map(order => ({
+          id: Number(order.id),
+          type: order.type || 'Water',
+          issue: order.issue || '',
+          location: order.location || '',
+          date: order.date || '',
+          number811: order.number811 || '',
+          status: order.status || '',
+          notes: order.notes || '',
+          rowColor: order.row_color || '',
+          archived: Boolean(order.archived)
+        }));
+
+        selectedId = null;
+        renderTable();
+        updateSaveStatus(`Loaded ${workOrders.length} records from local database.`);
+      } catch (error) {
+        updateSaveStatus(`Load from local DB failed: ${error.message}`);
+        renderTable();
+      }
+    }
+
+    async function saveToApi() {
+      const payload = workOrders.map(order => ({
+        id: order.id,
+        type: order.type,
+        issue: order.issue,
+        location: order.location,
+        date: order.date || null,
+        number811: order.number811 || '',
+        status: order.status || '',
+        notes: order.notes || '',
+        row_color: order.rowColor || null,
+        archived: Boolean(order.archived),
+        updated_at: new Date().toISOString()
+      }));
+
+      const response = await fetch('http://127.0.0.1:5000/api/work-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Save failed');
+      }
+
+      const result = await response.json();
+      updateSaveStatus(`Saved ${result.count} records to local database file.`);
     }
 
     chips.forEach(chip => {
@@ -726,7 +797,6 @@
             date: item.date || new Date().toISOString().slice(0, 10),
             number811: item.number811 || '',
             status: item.status || 'Open',
-            assignedTo: item.assignedTo || '',
             notes: item.notes || '',
             rowColor: item.rowColor || '',
             archived: Boolean(item.archived)
@@ -756,7 +826,6 @@
         date: new Date().toISOString().slice(0, 10),
         number811: '',
         status: 'Open',
-        assignedTo: '',
         notes: '',
         rowColor: '',
         archived: false
@@ -809,7 +878,22 @@
       }
     });
 
+    saveDatabaseBtn.addEventListener('click', async () => {
+      try {
+        saveDatabaseBtn.disabled = true;
+        saveDatabaseBtn.textContent = 'Saving…';
+        await saveToApi();
+      } catch (error) {
+        updateSaveStatus(`Save failed: ${error.message}`);
+        alert(`Save failed: ${error.message}`);
+      } finally {
+        saveDatabaseBtn.disabled = false;
+        saveDatabaseBtn.textContent = 'Save';
+      }
+    });
+
     renderTable();
+    loadFromApi();
   </script>
 </body>
 </html>
