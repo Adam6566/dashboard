@@ -1,442 +1,602 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Work Order Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
-      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
-      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2rem);
-      --space-1: 0.25rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
-      --shadow-md: 0 10px 24px rgba(0,0,0,.25);
-      --color-bg: #000000;
-      --color-surface: #07090c;
-      --color-surface-2: #101319;
-      --color-surface-3: #181d24;
-      --color-border: rgba(255,255,255,0.1);
-      --color-divider: rgba(255,255,255,0.08);
-      --color-text: #f3f5f7;
-      --color-text-muted: #b9c0c8;
-      --color-text-faint: #8f98a2;
-      --color-accent: #58a6ff;
-      --row-red: #8f1b28;
-      --row-yellow: #665216;
-      --row-green: #1f4d34;
-      --row-blue: #203d5f;
-      --row-purple: #443064;
-      --row-gray: #30353b;
-      --focus: #8ab4ff;
-      --font-body: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Work Order Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Sized for a big TV — everything scales with viewport width */
+    --text-xs:  clamp(0.8rem,  0.65rem + 0.40vw, 1.05rem);
+    --text-sm:  clamp(0.9rem,  0.75rem + 0.45vw, 1.2rem);
+    --text-base:clamp(1.05rem, 0.85rem + 0.55vw, 1.45rem);
+    --text-lg:  clamp(1.3rem,  1.0rem  + 0.9vw,  2.1rem);
+    --text-xl:  clamp(1.9rem,  1.3rem  + 1.8vw,  3.4rem);
 
-    *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: var(--font-body);
-      font-size: var(--text-base);
-      color: var(--color-text);
-      background-color: var(--color-bg);
-    }
+    --bg-0: #04060c;
+    --bg-1: #0a1020;
+    --panel:      rgba(13, 20, 36, 0.72);
+    --panel-soft: rgba(20, 30, 52, 0.55);
+    --border:  rgba(120, 170, 255, 0.16);
+    --border-strong: rgba(120, 190, 255, 0.35);
+    --divider: rgba(140, 180, 255, 0.10);
 
-    .app {
-      min-height: 100vh;
-      display: grid;
-      grid-template-rows: auto auto 1fr;
-      gap: var(--space-4);
-      padding: var(--space-5);
-    }
+    --text:       #eef3fb;
+    --text-muted: #a8b6cf;
+    --text-faint: #77869f;
 
-    .panel {
-      background: rgba(29,32,35,0.94);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-sm);
-      backdrop-filter: blur(10px);
-    }
+    --volt:   #ffd94d;   /* lightning yellow  */
+    --spark:  #55e0ff;   /* electric cyan     */
+    --accent: #4d9dff;   /* action blue       */
+    --focus:  #8ad2ff;
 
-    .header {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-      padding: var(--space-5) var(--space-6);
-      align-items: center;
-      text-align: center;
-    }
+    --row-red:    #7e1d2b;
+    --row-yellow: #6b5a1a;
+    --row-green:  #1c5238;
+    --row-blue:   #1f4066;
+    --row-purple: #46306b;
 
-    .title-block h1 {
-      margin: 0;
-      font-size: var(--text-xl);
-      line-height: 1.1;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      text-transform: uppercase;
-    }
+    --t-water:    #38bdf8;
+    --t-sewer:    #34d399;
+    --t-streets:  #f59e0b;
+    --t-wwtp:     #2dd4bf;
+    --t-police:   #818cf8;
+    --t-fire:     #f87171;
+    --t-buildings:#e879f9;
+    --t-other:    #94a3b8;
 
-    .title-block p {
-      margin: var(--space-2) 0 0;
-      color: var(--color-text-muted);
-      max-width: 60ch;
-    }
+    --radius: 22px;
+    --radius-sm: 12px;
+    --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Sora', 'Inter', system-ui, sans-serif;
+  }
 
-    .meta {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: var(--space-3);
-    }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 
-    .stat {
-      padding: var(--space-4);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: rgba(255,255,255,0.02);
-    }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text);
+    background:
+      radial-gradient(1200px 800px at 85% -10%, rgba(77, 157, 255, 0.10), transparent 60%),
+      radial-gradient(1000px 700px at -10% 110%, rgba(85, 224, 255, 0.07), transparent 55%),
+      linear-gradient(155deg, var(--bg-1) 0%, var(--bg-0) 55%, #030509 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
 
-    .stat-label {
-      display: block;
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--color-text-faint);
-      margin-bottom: var(--space-2);
-    }
+  /* ---------- Organic background shapes ---------- */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.55;
+  }
+  .blob-1 { width: 46vw; height: 46vw; top: -18vw; left: -14vw;
+            background: radial-gradient(circle at 60% 60%, rgba(255,217,77,0.16), rgba(85,224,255,0.10) 55%, transparent 75%); }
+  .blob-2 { width: 38vw; height: 38vw; bottom: -16vw; right: -10vw;
+            background: radial-gradient(circle at 40% 40%, rgba(77,157,255,0.18), rgba(129,140,248,0.08) 60%, transparent 78%); }
+  .blob-3 { width: 24vw; height: 24vw; top: 34vh; right: 22vw;
+            background: radial-gradient(circle, rgba(85,224,255,0.08), transparent 70%); }
 
-    .stat-value {
-      font-size: var(--text-lg);
-      font-weight: 700;
-    }
+  /* ---------- Lightning bolt from the upper left ---------- */
+  .bolt {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(44vw, 780px);
+    height: auto;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.9;
+    animation: bolt-flicker 7s ease-in-out infinite;
+  }
+  @keyframes bolt-flicker {
+    0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 18px rgba(255,217,77,0.35)); }
+    46%      { opacity: 0.95; filter: drop-shadow(0 0 30px rgba(255,217,77,0.55)); }
+    48%      { opacity: 0.65; filter: drop-shadow(0 0 12px rgba(255,217,77,0.25)); }
+    50%      { opacity: 1;    filter: drop-shadow(0 0 40px rgba(85,224,255,0.6)); }
+    54%      { opacity: 0.88; filter: drop-shadow(0 0 22px rgba(255,217,77,0.4)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bolt { animation: none; }
+  }
 
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-      justify-content: space-between;
-      align-items: center;
-      padding: var(--space-4) var(--space-5);
-    }
+  /* ---------- Layout ---------- */
+  .app {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    gap: clamp(0.8rem, 1.2vw, 1.4rem);
+    padding: clamp(1rem, 1.8vw, 2rem);
+  }
 
-    .toolbar-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-      align-items: center;
-    }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(14px);
+  }
 
-    .chip, .button, .search, select, input, textarea {
-      border: 1px solid var(--color-border);
-      background: var(--color-surface-2);
-      color: var(--color-text);
-      border-radius: var(--radius-md);
-      min-height: 44px;
-      padding: 0 var(--space-4);
-      font: inherit;
-    }
+  /* ---------- Header ---------- */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: clamp(1rem, 1.6vw, 1.6rem) clamp(1.2rem, 2vw, 2rem);
+    border-radius: var(--radius) var(--radius) 60px var(--radius);
+    flex-wrap: wrap;
+  }
 
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      cursor: pointer;
-      transition: 180ms ease;
-    }
+  .brand { display: flex; align-items: center; gap: 1rem; }
 
-    .chip.active {
-      background: rgba(88,166,255,0.18);
-      border-color: rgba(88,166,255,0.4);
-      color: #dcecff;
-    }
+  .brand-bolt {
+    width: clamp(2.6rem, 3.4vw, 4rem);
+    height: clamp(2.6rem, 3.4vw, 4rem);
+    flex: 0 0 auto;
+    filter: drop-shadow(0 0 12px rgba(255,217,77,0.55));
+  }
 
-    .button {
-      cursor: pointer;
-      font-weight: 700;
-    }
+  .brand h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    background: linear-gradient(92deg, #ffffff 0%, var(--spark) 55%, var(--volt) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
-    .button.primary {
-      background: linear-gradient(180deg, #4389e2 0%, #296fc9 100%);
-      border-color: rgba(255,255,255,0.12);
-    }
+  .brand p {
+    margin: 0.25rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
 
-    .button.ghost {
-      background: transparent;
-    }
+  .clock { text-align: right; }
+  .clock-time {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+    text-shadow: 0 0 24px rgba(85,224,255,0.35);
+  }
+  .clock-date {
+    margin-top: 0.3rem;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-    .search {
-      min-width: 260px;
-    }
+  /* ---------- Stats ---------- */
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(0.6rem, 1vw, 1.1rem);
+  }
 
-    .table-wrap {
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: 1fr;
-      min-height: 0;
-    }
+  .stat {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(0.9rem, 1.3vw, 1.4rem) clamp(1rem, 1.4vw, 1.5rem);
+    background: var(--panel-soft);
+    border: 1px solid var(--border);
+    border-radius: 18px 18px 18px 38px;
+    backdrop-filter: blur(12px);
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, var(--stat-color, var(--spark)), transparent 80%);
+  }
+  .stat-label {
+    display: block;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-faint);
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .stat-value.small { font-size: var(--text-base); font-family: var(--font-body); font-weight: 600; }
 
-    .table-scroller {
-      overflow: auto;
-      border-radius: var(--radius-xl);
-    }
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(0.8rem, 1.2vw, 1.2rem) clamp(1rem, 1.6vw, 1.6rem);
+    border-radius: 44px;
+  }
+  .toolbar-group { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
+  .button, .search, select, input, textarea {
+    border: 1px solid var(--border);
+    background: rgba(10, 16, 30, 0.8);
+    color: var(--text);
+    border-radius: 999px;
+    min-height: clamp(2.75rem, 3.2vw, 3.4rem);
+    padding: 0 clamp(1rem, 1.4vw, 1.4rem);
+    font: inherit;
+    font-size: var(--text-sm);
+  }
 
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background: rgba(20,22,24,0.98);
-      color: var(--color-text-muted);
-      text-align: left;
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: var(--space-4);
-      border-bottom: 1px solid var(--color-border);
-    }
+  .button {
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    white-space: nowrap;
+  }
+  .button:hover { transform: translateY(-1px); }
+  .button:active { transform: translateY(0); }
 
-    tbody td {
-      padding: var(--space-4);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      vertical-align: middle;
-      color: var(--color-text);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+  .button.primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #2b6fd8 100%);
+    border-color: var(--border-strong);
+    box-shadow: 0 0 20px rgba(77,157,255,0.35);
+  }
+  .button.primary:hover { box-shadow: 0 0 30px rgba(77,157,255,0.55); }
 
-    tbody tr {
-      background: rgba(255,255,255,0.02);
-      transition: background-color 160ms ease;
-    }
+  .button.volt {
+    background: linear-gradient(135deg, var(--volt) 0%, #f0a818 100%);
+    color: #201802;
+    border-color: rgba(255,225,120,0.6);
+    box-shadow: 0 0 20px rgba(255,217,77,0.3);
+  }
+  .button.volt:hover { box-shadow: 0 0 32px rgba(255,217,77,0.5); }
 
-    tbody tr:hover {
-      background: rgba(255,255,255,0.05);
-    }
+  .button.ghost { background: rgba(255,255,255,0.03); }
+  .button.ghost:hover { background: rgba(255,255,255,0.08); }
 
-    tbody tr.selected {
-      outline: 2px solid rgba(138,180,255,0.55);
-      outline-offset: -2px;
-    }
+  .button.active {
+    background: rgba(85,224,255,0.16);
+    border-color: rgba(85,224,255,0.5);
+    color: #d8f6ff;
+  }
 
-    .type-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 76px;
-      padding: 0.45rem 0.75rem;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.1);
-      font-size: var(--text-sm);
-      font-weight: 700;
-    }
+  .search { min-width: clamp(240px, 24vw, 420px); border-radius: 999px; }
 
-    .muted { color: var(--color-text-muted); }
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path fill='%23a8b6cf' d='M1 1l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 1.1rem center;
+    padding-right: 2.8rem;
+  }
 
-    .actions {
-      display: flex;
-      gap: var(--space-2);
-      justify-content: flex-end;
-    }
+  input:focus, textarea:focus, select:focus, .button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
 
-    .icon-btn {
-      min-width: 44px;
-      min-height: 44px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: rgba(255,255,255,0.03);
-      color: var(--color-text);
-      cursor: pointer;
-      font-weight: 700;
-    }
+  #saveStatus {
+    font-size: var(--text-xs);
+    color: var(--text-faint);
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: 200ms ease;
+    white-space: nowrap;
+  }
+  #saveStatus.ok    { color: #7ef0b2; border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.08); }
+  #saveStatus.error { color: #ff9d9d; border-color: rgba(248,113,113,0.4);  background: rgba(248,113,113,0.08); }
+  #saveStatus.dirty { color: var(--volt); border-color: rgba(255,217,77,0.4); background: rgba(255,217,77,0.07); }
 
-    .drawer {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: min(440px, 100%);
-      height: 100vh;
-      background: rgba(24,27,30,0.98);
-      border-left: 1px solid var(--color-border);
-      box-shadow: var(--shadow-md);
-      transform: translateX(100%);
-      transition: transform 220ms ease;
-      z-index: 20;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-    }
+  /* ---------- Table ---------- */
+  .table-wrap { overflow: hidden; display: grid; min-height: 0; border-radius: var(--radius) 60px var(--radius) var(--radius); }
+  .table-scroller { overflow: auto; }
 
-    .drawer.open { transform: translateX(0); }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 
-    .drawer-header, .drawer-footer {
-      padding: var(--space-5);
-      border-bottom: 1px solid var(--color-divider);
-    }
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(8, 13, 26, 0.97);
+    color: var(--spark);
+    text-align: left;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: clamp(0.8rem, 1.2vw, 1.2rem);
+    border-bottom: 1px solid var(--border-strong);
+  }
 
-    .drawer-footer {
-      border-bottom: 0;
-      border-top: 1px solid var(--color-divider);
-      display: flex;
-      gap: var(--space-3);
-      justify-content: flex-end;
-    }
+  tbody td {
+    padding: clamp(0.75rem, 1.1vw, 1.15rem);
+    border-bottom: 1px solid var(--divider);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-base);
+  }
 
-    .drawer-body {
-      overflow: auto;
-      padding: var(--space-5);
-      display: grid;
-      gap: var(--space-4);
-      align-content: start;
-    }
+  tbody tr { background: rgba(255,255,255,0.015); transition: background-color 150ms ease; cursor: default; }
+  tbody tr:hover { background: rgba(85,224,255,0.06); }
+  tbody tr.selected { outline: 2px solid rgba(85,224,255,0.6); outline-offset: -2px; }
 
-    .field {
-      display: grid;
-      gap: var(--space-2);
-    }
+  .empty-row td {
+    text-align: center;
+    color: var(--text-faint);
+    padding: 3rem 1rem;
+    white-space: normal;
+  }
 
-    label {
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-      font-weight: 600;
-    }
+  .type-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    background: color-mix(in srgb, var(--pill, var(--t-other)) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--pill, var(--t-other)) 45%, transparent);
+    color: color-mix(in srgb, var(--pill, var(--t-other)) 80%, #ffffff);
+    white-space: nowrap;
+  }
+  .type-pill::before {
+    content: '';
+    width: 0.55em; height: 0.55em;
+    border-radius: 999px;
+    background: var(--pill, var(--t-other));
+    box-shadow: 0 0 8px var(--pill, var(--t-other));
+  }
 
-    textarea {
-      min-height: 110px;
-      padding-top: var(--space-3);
-      resize: vertical;
-    }
+  .muted { color: var(--text-muted); }
 
-    input:focus, textarea:focus, select:focus, .button:focus, .icon-btn:focus, .chip:focus {
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
-    }
+  .actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
 
-    .context-menu {
-      position: fixed;
-      min-width: 220px;
-      background: rgba(27,30,34,0.98);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      padding: var(--space-2);
-      z-index: 30;
-      display: none;
-    }
+  .icon-btn {
+    min-height: 2.6rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    transition: 140ms ease;
+    white-space: nowrap;
+  }
+  .icon-btn:hover { background: rgba(85,224,255,0.14); border-color: rgba(85,224,255,0.45); }
+  .icon-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-    .context-menu.open { display: block; }
+  /* ---------- Drawer ---------- */
+  .drawer {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(480px, 100%);
+    height: 100vh;
+    background: rgba(10, 16, 30, 0.98);
+    border-left: 1px solid var(--border-strong);
+    box-shadow: -30px 0 60px rgba(0,0,0,0.5);
+    transform: translateX(105%);
+    transition: transform 240ms ease;
+    z-index: 20;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .drawer.open { transform: translateX(0); }
 
-    .menu-title {
-      padding: var(--space-2) var(--space-3);
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-text-faint);
-    }
+  .drawer-header { padding: 1.4rem 1.6rem; border-bottom: 1px solid var(--divider); }
+  .drawer-header h2 {
+    margin: 0 0 0.3rem;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+  }
+  .drawer-footer {
+    padding: 1.2rem 1.6rem;
+    border-top: 1px solid var(--divider);
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+  }
+  .drawer-body {
+    overflow: auto;
+    padding: 1.4rem 1.6rem;
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
 
-    .menu-item {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: 0.8rem 0.9rem;
-      border: 0;
-      background: transparent;
-      color: var(--color-text);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      text-align: left;
-      font: inherit;
-    }
+  .drawer .button, .drawer select, .drawer input, .drawer textarea { border-radius: var(--radius-sm); }
+  .field { display: grid; gap: 0.4rem; }
+  label { font-size: var(--text-sm); color: var(--text-muted); font-weight: 600; }
+  textarea { min-height: 120px; padding: 0.8rem 1.1rem; resize: vertical; border-radius: var(--radius-sm); }
 
-    .menu-item:hover, .menu-item:focus {
-      background: rgba(255,255,255,0.06);
-      outline: none;
-    }
+  .hint { color: var(--text-faint); font-size: var(--text-sm); margin: 0; }
 
-    .swatch {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.25);
-      flex: 0 0 auto;
-    }
+  /* ---------- Context menu ---------- */
+  .context-menu {
+    position: fixed;
+    min-width: 230px;
+    background: rgba(12, 18, 33, 0.98);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+    padding: 0.4rem;
+    z-index: 30;
+    display: none;
+  }
+  .context-menu.open { display: block; }
+  .menu-title {
+    padding: 0.5rem 0.8rem;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+  .menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-size: var(--text-sm);
+  }
+  .menu-item:hover, .menu-item:focus-visible { background: rgba(85,224,255,0.1); outline: none; }
+  .swatch {
+    width: 18px; height: 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.3);
+    flex: 0 0 auto;
+  }
 
-    .hint {
-      color: var(--color-text-faint);
-      font-size: var(--text-sm);
-    }
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(2, 4, 10, 0.5);
+    backdrop-filter: blur(2px);
+    display: none;
+    z-index: 10;
+  }
+  .overlay.open { display: block; }
 
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      display: none;
-      z-index: 10;
-    }
-
-    .overlay.open { display: block; }
-
-    @media (max-width: 1080px) {
-      .header { grid-template-columns: 1fr; }
-      .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .search { min-width: 100%; }
-      table { min-width: 980px; }
-    }
-  </style>
+  @media (max-width: 1100px) {
+    .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .search { min-width: 100%; }
+    table { min-width: 1024px; }
+    .clock { display: none; }
+    .bolt { width: 70vw; opacity: 0.55; }
+  }
+</style>
 </head>
 <body>
+  <!-- Organic glow blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Lightning bolt shooting down from the upper left -->
+  <svg class="bolt" viewBox="0 0 600 760" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="boltFill" x1="60" y1="0" x2="420" y2="760" gradientUnits="userSpaceOnUse">
+        <stop offset="0"   stop-color="#fff3b0"/>
+        <stop offset="0.35" stop-color="#ffd94d"/>
+        <stop offset="0.75" stop-color="#55e0ff"/>
+        <stop offset="1"   stop-color="#4d9dff" stop-opacity="0.85"/>
+      </linearGradient>
+      <linearGradient id="boltGlow" x1="60" y1="0" x2="420" y2="760" gradientUnits="userSpaceOnUse">
+        <stop offset="0"  stop-color="#ffd94d" stop-opacity="0.35"/>
+        <stop offset="1"  stop-color="#55e0ff" stop-opacity="0.12"/>
+      </linearGradient>
+      <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="26"/>
+      </filter>
+    </defs>
+    <!-- wide soft glow behind the bolt -->
+    <path filter="url(#soft)" fill="url(#boltGlow)"
+      d="M96 -60 L268 236 L188 252 L356 470 L292 486 L470 760 L206 462 L286 440 L120 226 L204 204 Z"/>
+    <!-- the bolt itself -->
+    <path fill="url(#boltFill)" opacity="0.92"
+      d="M110 -60 L254 226 L182 242 L334 452 L274 468 L436 730 L198 452 L272 432 L118 220 L196 200 Z"/>
+    <!-- hot white core streak -->
+    <path fill="#ffffff" opacity="0.5"
+      d="M150 -60 L246 158 L212 166 L318 330 L292 338 L398 520 L268 348 L300 340 L182 168 L214 160 Z"/>
+  </svg>
+
   <a href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to content</a>
+
   <div class="app">
     <header class="panel header">
-      <div class="title-block">
-        <h1>Work Orders Board</h1>
+      <div class="brand">
+        <svg class="brand-bolt" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M13 2 L4.5 13.5 H10 L8.5 22 L19.5 9.5 H13.5 Z" fill="url(#miniBolt)"/>
+          <defs>
+            <linearGradient id="miniBolt" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#ffd94d"/><stop offset="1" stop-color="#55e0ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1>Work Orders</h1>
+          <p>Public Works &middot; Live Board</p>
+        </div>
       </div>
-      <div class="meta" aria-label="Dashboard summary">
-        <div class="stat"><span class="stat-label">Open Jobs</span><span class="stat-value" id="stat-open">0</span></div>
-        <div class="stat"><span class="stat-label">Water</span><span class="stat-value" id="stat-water">0</span></div>
-        <div class="stat"><span class="stat-label">Sewer</span><span class="stat-value" id="stat-sewer">0</span></div>
-        <div class="stat"><span class="stat-label">Archived</span><span class="stat-value" id="stat-archived">0</span></div>
-        <div class="stat"><span class="stat-label">Last Updated</span><span class="stat-value" id="stat-updated">--</span></div>
+      <div class="clock" aria-hidden="true">
+        <div class="clock-time" id="clockTime">--:--</div>
+        <div class="clock-date" id="clockDate">&nbsp;</div>
       </div>
     </header>
 
+    <div class="meta" aria-label="Dashboard summary">
+      <div class="stat" style="--stat-color: var(--volt);"><span class="stat-label">Open Jobs</span><span class="stat-value" id="stat-open">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-water);"><span class="stat-label">Water</span><span class="stat-value" id="stat-water">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-sewer);"><span class="stat-label">Sewer</span><span class="stat-value" id="stat-sewer">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-streets);"><span class="stat-label">Streets</span><span class="stat-value" id="stat-streets">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-other);"><span class="stat-label">Archived</span><span class="stat-value" id="stat-archived">0</span></div>
+      <div class="stat" style="--stat-color: var(--spark);"><span class="stat-label">Board Updated</span><span class="stat-value small" id="stat-updated">--</span></div>
+    </div>
+
     <section class="panel toolbar" aria-label="Filters and actions">
-      <div class="toolbar-group" role="group" aria-label="Type filters">
-        <button class="chip active" data-filter-type="all">All</button>
-        <button class="chip" data-filter-type="Water">Water</button>
-        <button class="chip" data-filter-type="Sewer">Sewer</button>
+      <div class="toolbar-group">
+        <select id="typeFilter" aria-label="Filter by type">
+          <option value="all">All Types</option>
+          <option>Water</option>
+          <option>Sewer</option>
+          <option>Streets</option>
+          <option>WWTP</option>
+          <option>Police Department</option>
+          <option>Fire Department</option>
+          <option>Buildings</option>
+          <option>Other</option>
+        </select>
+        <input id="searchInput" class="search" type="search" spellcheck="true" placeholder="Search issue, location, status, or 811 number" aria-label="Search work orders" />
+        <button class="button ghost" id="archiveToggleBtn" aria-pressed="false">Show Archive</button>
       </div>
       <div class="toolbar-group">
-        <input id="searchInput" class="search" type="search" placeholder="Search issue, location, or 811 number" aria-label="Search work orders" />
-        <button class="chip" id="archiveToggleBtn" aria-pressed="false">Show Archive</button>
-        <button class="button ghost" id="clearColorsBtn">Clear Selected Row Color</button>
-        <button class="button primary" id="saveDatabaseBtn">Save</button>
-        <button class="button ghost" id="exportBtn">Export Data</button>
-        <label class="button ghost" for="importFile" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">Import Data</label>
+        <span id="saveStatus" role="status">Ready</span>
+        <button class="button ghost" id="clearColorsBtn">Clear Row Color</button>
+        <button class="button ghost" id="exportBtn">Export</button>
+        <label class="button ghost" for="importFile" style="display:inline-flex;align-items:center;cursor:pointer;">Import</label>
         <input id="importFile" type="file" accept="application/json" hidden />
-        <button class="button primary" id="newOrderBtn">+ New Work Order</button>
+        <button class="button primary" id="saveDatabaseBtn">Save to Database</button>
+        <button class="button volt" id="newOrderBtn">&#9889; New Work Order</button>
       </div>
     </section>
 
@@ -445,10 +605,10 @@
         <table aria-label="Work orders table">
           <thead>
             <tr>
-              <th style="width: 9rem;">Type</th>
-              <th style="width: 18rem;">Issue</th>
-              <th style="width: 15rem;">Location</th>
-              <th style="width: 10rem;">Date</th>
+              <th style="width: 13rem;">Type</th>
+              <th style="width: 20rem;">Issue</th>
+              <th style="width: 16rem;">Location</th>
+              <th style="width: 9rem;">Date</th>
               <th style="width: 11rem;">811 Number</th>
               <th>Status</th>
               <th style="width: 15rem;">Actions</th>
@@ -464,24 +624,30 @@
 
   <aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawerTitle">
     <div class="drawer-header">
-      <h2 id="drawerTitle" style="margin:0 0 .35rem;font-size:var(--text-lg);">Edit Work Order</h2>
-      <p class="hint" style="margin:0;">Update details here. Right-click the row in the table to set a full-row color.</p>
+      <h2 id="drawerTitle">Edit Work Order</h2>
+      <p class="hint">Update details here. Right-click a row in the table to set its color.</p>
     </div>
     <div class="drawer-body">
       <div class="field">
-        <label for="fieldType">Type</label>
+        <label for="fieldType">Type of Issue</label>
         <select id="fieldType">
           <option>Water</option>
           <option>Sewer</option>
+          <option>Streets</option>
+          <option>WWTP</option>
+          <option>Police Department</option>
+          <option>Fire Department</option>
+          <option>Buildings</option>
+          <option>Other</option>
         </select>
       </div>
       <div class="field">
         <label for="fieldIssue">Issue</label>
-        <input id="fieldIssue" type="text" />
+        <input id="fieldIssue" type="text" spellcheck="true" />
       </div>
       <div class="field">
         <label for="fieldLocation">Location</label>
-        <input id="fieldLocation" type="text" />
+        <input id="fieldLocation" type="text" spellcheck="true" />
       </div>
       <div class="field">
         <label for="fieldDate">Date</label>
@@ -493,11 +659,11 @@
       </div>
       <div class="field">
         <label for="fieldStatus">Status</label>
-        <input id="fieldStatus" type="text" />
+        <input id="fieldStatus" type="text" spellcheck="true" />
       </div>
       <div class="field">
         <label for="fieldNotes">Notes</label>
-        <textarea id="fieldNotes"></textarea>
+        <textarea id="fieldNotes" spellcheck="true"></textarea>
       </div>
     </div>
     <div class="drawer-footer">
@@ -508,41 +674,51 @@
 
   <div class="context-menu" id="contextMenu" role="menu" aria-label="Row color menu">
     <div class="menu-title">Row color</div>
-    <button class="menu-item" data-color=""><span class="swatch" style="background: var(--row-gray);"></span>Default</button>
-    <button class="menu-item" data-color="var(--row-red)"><span class="swatch" style="background: var(--row-red);"></span>Red tone</button>
-    <button class="menu-item" data-color="var(--row-yellow)"><span class="swatch" style="background: var(--row-yellow);"></span>Yellow tone</button>
-    <button class="menu-item" data-color="var(--row-green)"><span class="swatch" style="background: var(--row-green);"></span>Green tone</button>
-    <button class="menu-item" data-color="var(--row-blue)"><span class="swatch" style="background: var(--row-blue);"></span>Blue tone</button>
-    <button class="menu-item" data-color="var(--row-purple)"><span class="swatch" style="background: var(--row-purple);"></span>Purple tone</button>
+    <button class="menu-item" data-color=""><span class="swatch" style="background: #2b3242;"></span>Default</button>
+    <button class="menu-item" data-color="var(--row-red)"><span class="swatch" style="background: var(--row-red);"></span>Red — urgent</button>
+    <button class="menu-item" data-color="var(--row-yellow)"><span class="swatch" style="background: var(--row-yellow);"></span>Yellow — waiting</button>
+    <button class="menu-item" data-color="var(--row-green)"><span class="swatch" style="background: var(--row-green);"></span>Green — on track</button>
+    <button class="menu-item" data-color="var(--row-blue)"><span class="swatch" style="background: var(--row-blue);"></span>Blue — scheduled</button>
+    <button class="menu-item" data-color="var(--row-purple)"><span class="swatch" style="background: var(--row-purple);"></span>Purple — review</button>
   </div>
 
   <script>
-    let workOrders = [
-      { id: 1, type: 'Water', issue: '8-inch main leak', location: 'Pine St & 3rd Ave', date: '2026-08-03', number811: '81124561', status: 'Open', notes: 'Traffic cones placed. Waiting on lane closure.', rowColor: 'var(--row-red)', archived: false },
-      { id: 2, type: 'Sewer', issue: 'Manhole overflow', location: 'Maple Ave Lift Station', date: '2026-08-03', number811: '81124562', status: 'Scheduled', notes: 'Pump truck requested for afternoon.', rowColor: 'var(--row-yellow)', archived: false },
-      { id: 3, type: 'Water', issue: 'Valve inspection', location: 'Well Rd Tank Site', date: '2026-08-02', number811: '81124548', status: 'Planned', notes: 'Routine inspection before weekend work.', rowColor: 'var(--row-green)', archived: false },
-      { id: 4, type: 'Sewer', issue: 'Line backup complaint', location: 'Jefferson Ct', date: '2026-08-01', number811: '81124531', status: 'Open', notes: 'Resident requested callback after service.', rowColor: '', archived: false },
-      { id: 5, type: 'Water', issue: 'Hydrant replacement', location: 'Oak Dr near school', date: '2026-08-04', number811: '81124580', status: 'On Hold', notes: 'Material delivery expected tomorrow morning.', rowColor: '', archived: false }
-    ];
+    'use strict';
 
+    const API_URL = 'http://127.0.0.1:5000/api/work-orders';
+
+    const TYPE_COLORS = {
+      'Water': 'var(--t-water)',
+      'Sewer': 'var(--t-sewer)',
+      'Streets': 'var(--t-streets)',
+      'WWTP': 'var(--t-wwtp)',
+      'Police Department': 'var(--t-police)',
+      'Fire Department': 'var(--t-fire)',
+      'Buildings': 'var(--t-buildings)',
+      'Other': 'var(--t-other)'
+    };
+
+    let workOrders = [];
     let currentFilter = 'all';
     let currentSearch = '';
     let selectedId = null;
     let editingId = null;
     let contextRowId = null;
     let showArchive = false;
+    let isDirty = false;
 
-    function updateSaveStatus(message) {
-      console.log(message);
-    }
+    /* Auto-refresh: reload from the database every 2 minutes,
+       but never while there are unsaved edits or the edit drawer is open. */
+    const AUTO_REFRESH_MS = 2 * 60 * 1000;
 
     const tableBody = document.getElementById('tableBody');
-    const chips = [...document.querySelectorAll('[data-filter-type]')];
+    const typeFilter = document.getElementById('typeFilter');
     const searchInput = document.getElementById('searchInput');
     const drawer = document.getElementById('drawer');
     const overlay = document.getElementById('overlay');
     const contextMenu = document.getElementById('contextMenu');
     const saveDatabaseBtn = document.getElementById('saveDatabaseBtn');
+    const saveStatus = document.getElementById('saveStatus');
 
     const fields = {
       type: document.getElementById('fieldType'),
@@ -554,29 +730,66 @@
       notes: document.getElementById('fieldNotes')
     };
 
-    function formatDate(iso) {
-      if (!iso) return '';
-      const [y, m, d] = iso.split('-');
-      return `${m}/${d}/${y.slice(2)}`;
+    /* ---------- Helpers ---------- */
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
-    function refreshStats(data) {
-      document.getElementById('stat-open').textContent = data.length;
-      document.getElementById('stat-water').textContent = data.filter(item => item.type === 'Water').length;
-      document.getElementById('stat-sewer').textContent = data.filter(item => item.type === 'Sewer').length;
-      document.getElementById('stat-archived').textContent = workOrders.filter(item => item.archived).length;
+    function formatDate(iso) {
+      if (!iso) return '';
+      const parts = iso.split('-');
+      if (parts.length !== 3) return iso;
+      return `${parts[1]}/${parts[2]}/${parts[0].slice(2)}`;
+    }
+
+    function setStatus(message, kind) {
+      saveStatus.textContent = message;
+      saveStatus.className = kind || '';
+    }
+
+    function markDirty() {
+      isDirty = true;
+      setStatus('Unsaved changes', 'dirty');
+    }
+
+    /* ---------- Live clock ---------- */
+
+    function tickClock() {
       const now = new Date();
-      const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      const date = now.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
-      document.getElementById('stat-updated').textContent = date + '  ' + time;
+      document.getElementById('clockTime').textContent =
+        now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('clockDate').textContent =
+        now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    tickClock();
+    setInterval(tickClock, 15000);
+
+    /* ---------- Rendering ---------- */
+
+    function refreshStats(visible) {
+      const active = workOrders.filter(item => !item.archived);
+      document.getElementById('stat-open').textContent = active.length;
+      document.getElementById('stat-water').textContent = active.filter(i => i.type === 'Water').length;
+      document.getElementById('stat-sewer').textContent = active.filter(i => i.type === 'Sewer').length;
+      document.getElementById('stat-streets').textContent = active.filter(i => i.type === 'Streets').length;
+      document.getElementById('stat-archived').textContent = workOrders.filter(i => i.archived).length;
+      const now = new Date();
+      document.getElementById('stat-updated').textContent =
+        now.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+        now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     }
 
     function getFilteredData() {
       return workOrders.filter(item => {
         const typePass = currentFilter === 'all' || item.type === currentFilter;
         const archivePass = showArchive ? item.archived : !item.archived;
-        const searchBlob = `${item.type} ${item.issue} ${item.location} ${item.number811} ${item.status}`.toLowerCase();
-        const searchPass = !currentSearch || searchBlob.includes(currentSearch);
+        const blob = `${item.type} ${item.issue} ${item.location} ${item.number811} ${item.status} ${item.notes}`.toLowerCase();
+        const searchPass = !currentSearch || blob.includes(currentSearch);
         return typePass && archivePass && searchPass;
       });
     }
@@ -586,18 +799,28 @@
       refreshStats(filtered);
       tableBody.innerHTML = '';
 
+      if (filtered.length === 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'empty-row';
+        tr.innerHTML = `<td colspan="7">${showArchive ? 'No archived work orders match.' : 'No work orders match. Hit ⚡ New Work Order to add one.'}</td>`;
+        tableBody.appendChild(tr);
+        return;
+      }
+
       filtered.forEach(item => {
         const tr = document.createElement('tr');
         tr.dataset.id = item.id;
-        if (item.rowColor) tr.style.background = `color-mix(in srgb, ${item.rowColor} 82%, #1b1e22)`;
+        if (item.rowColor) tr.style.background = `color-mix(in srgb, ${item.rowColor} 78%, #0a1020)`;
         if (selectedId === item.id) tr.classList.add('selected');
+
+        const pillColor = TYPE_COLORS[item.type] || 'var(--t-other)';
         tr.innerHTML = `
-          <td><span class="type-pill">${item.type}</span></td>
-          <td title="${item.issue}">${item.issue}</td>
-          <td title="${item.location}">${item.location}</td>
-          <td class="muted">${formatDate(item.date)}</td>
-          <td>${item.number811}</td>
-          <td title="${item.status}">${item.status}</td>
+          <td><span class="type-pill" style="--pill: ${pillColor};">${escapeHtml(item.type)}</span></td>
+          <td title="${escapeHtml(item.issue)}">${escapeHtml(item.issue)}</td>
+          <td title="${escapeHtml(item.location)}">${escapeHtml(item.location)}</td>
+          <td class="muted">${escapeHtml(formatDate(item.date))}</td>
+          <td class="muted">${escapeHtml(item.number811)}</td>
+          <td title="${escapeHtml(item.status)}">${escapeHtml(item.status)}</td>
           <td>
             <div class="actions">
               <button class="icon-btn" aria-label="Edit work order" data-edit="${item.id}">Edit</button>
@@ -637,16 +860,19 @@
           item.archived = !item.archived;
           item.status = item.archived ? 'Completed' : 'Open';
           if (selectedId === item.id && !showArchive && item.archived) selectedId = null;
+          markDirty();
           renderTable();
         });
       });
     }
 
+    /* ---------- Drawer ---------- */
+
     function openDrawer(id) {
       editingId = id;
       const item = workOrders.find(entry => entry.id === id);
       if (!item) return;
-      fields.type.value = item.type;
+      fields.type.value = TYPE_COLORS[item.type] ? item.type : 'Other';
       fields.issue.value = item.issue;
       fields.location.value = item.location;
       fields.date.value = item.date;
@@ -656,6 +882,7 @@
       drawer.classList.add('open');
       drawer.setAttribute('aria-hidden', 'false');
       overlay.classList.add('open');
+      fields.issue.focus();
     }
 
     function closeDrawer() {
@@ -663,18 +890,6 @@
       drawer.setAttribute('aria-hidden', 'true');
       overlay.classList.remove('open');
       editingId = null;
-    }
-
-    function openContextMenu(x, y) {
-      contextMenu.classList.add('open');
-      const maxX = window.innerWidth - contextMenu.offsetWidth - 12;
-      const maxY = window.innerHeight - contextMenu.offsetHeight - 12;
-      contextMenu.style.left = `${Math.max(12, Math.min(x, maxX))}px`;
-      contextMenu.style.top = `${Math.max(12, Math.min(y, maxY))}px`;
-    }
-
-    function closeContextMenu() {
-      contextMenu.classList.remove('open');
     }
 
     function saveCurrentEdit() {
@@ -689,24 +904,36 @@
       item.status = fields.status.value.trim();
       item.notes = fields.notes.value.trim();
       closeDrawer();
+      markDirty();
       renderTable();
     }
 
+    /* ---------- Context menu ---------- */
+
+    function openContextMenu(x, y) {
+      contextMenu.classList.add('open');
+      const maxX = window.innerWidth - contextMenu.offsetWidth - 12;
+      const maxY = window.innerHeight - contextMenu.offsetHeight - 12;
+      contextMenu.style.left = `${Math.max(12, Math.min(x, maxX))}px`;
+      contextMenu.style.top = `${Math.max(12, Math.min(y, maxY))}px`;
+    }
+
+    function closeContextMenu() {
+      contextMenu.classList.remove('open');
+    }
+
+    /* ---------- Database (Flask API) ---------- */
+
     async function loadFromApi() {
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/work-orders');
-        if (!response.ok) {
-          throw new Error('Failed to load work orders from local API');
-        }
-
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('API responded with ' + response.status);
         const data = await response.json();
-        if (!Array.isArray(data)) {
-          throw new Error('API did not return an array');
-        }
+        if (!Array.isArray(data)) throw new Error('API did not return an array');
 
         workOrders = data.map(order => ({
           id: Number(order.id),
-          type: order.type || 'Water',
+          type: order.type || 'Other',
           issue: order.issue || '',
           location: order.location || '',
           date: order.date || '',
@@ -718,15 +945,25 @@
         }));
 
         selectedId = null;
+        isDirty = false;
         renderTable();
-        updateSaveStatus(`Loaded ${workOrders.length} records from local database.`);
+        setStatus(`Loaded ${workOrders.length} record${workOrders.length === 1 ? '' : 's'} from database`, 'ok');
       } catch (error) {
-        updateSaveStatus(`Load from local DB failed: ${error.message}`);
         renderTable();
+        setStatus('Database offline — is app.py running?', 'error');
+        console.error('Load from local DB failed:', error);
       }
     }
 
+    /* Auto-refresh loop: keeps the TV current without touching unsaved work */
+    setInterval(() => {
+      const drawerOpen = drawer.classList.contains('open');
+      if (isDirty || drawerOpen) return;   // never overwrite in-progress edits
+      loadFromApi();
+    }, AUTO_REFRESH_MS);
+
     async function saveToApi() {
+      const now = new Date().toISOString();
       const payload = workOrders.map(order => ({
         id: order.id,
         type: order.type,
@@ -738,10 +975,10 @@
         notes: order.notes || '',
         row_color: order.rowColor || null,
         archived: Boolean(order.archived),
-        updated_at: new Date().toISOString()
+        updated_at: now
       }));
 
-      const response = await fetch('http://127.0.0.1:5000/api/work-orders', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -753,22 +990,11 @@
       }
 
       const result = await response.json();
-      updateSaveStatus(`Saved ${result.count} records to local database file.`);
+      isDirty = false;
+      setStatus(`Saved ${result.count} record${result.count === 1 ? '' : 's'} to database`, 'ok');
     }
 
-    chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        currentFilter = chip.dataset.filterType;
-        renderTable();
-      });
-    });
-
-    searchInput.addEventListener('input', () => {
-      currentSearch = searchInput.value.toLowerCase().trim();
-      renderTable();
-    });
+    /* ---------- Import / Export ---------- */
 
     function exportData() {
       const blob = new Blob([JSON.stringify(workOrders, null, 2)], { type: 'application/json' });
@@ -788,10 +1014,9 @@
         try {
           const parsed = JSON.parse(reader.result);
           if (!Array.isArray(parsed)) throw new Error('Invalid file format');
-          workOrders.length = 0;
-          parsed.forEach(item => workOrders.push({
-            id: Number(item.id) || Date.now() + Math.random(),
-            type: item.type === 'Sewer' ? 'Sewer' : 'Water',
+          workOrders = parsed.map(item => ({
+            id: Number(item.id) || Date.now() + Math.floor(Math.random() * 1000),
+            type: item.type || 'Other',
             issue: item.issue || '',
             location: item.location || '',
             date: item.date || new Date().toISOString().slice(0, 10),
@@ -802,6 +1027,7 @@
             archived: Boolean(item.archived)
           }));
           selectedId = null;
+          markDirty();
           renderTable();
         } catch (error) {
           alert('Could not import file. Please select a valid exported JSON file.');
@@ -810,19 +1036,32 @@
       reader.readAsText(file);
     }
 
+    /* ---------- Event wiring ---------- */
+
+    typeFilter.addEventListener('change', () => {
+      currentFilter = typeFilter.value;
+      renderTable();
+    });
+
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value.toLowerCase().trim();
+      renderTable();
+    });
+
     document.getElementById('exportBtn').addEventListener('click', exportData);
+
     document.getElementById('importFile').addEventListener('change', (event) => {
       importData(event.target.files[0]);
       event.target.value = '';
     });
 
     document.getElementById('newOrderBtn').addEventListener('click', () => {
-      const nextId = Math.max(...workOrders.map(item => item.id)) + 1;
+      const nextId = workOrders.length ? Math.max(...workOrders.map(item => item.id)) + 1 : 1;
       workOrders.unshift({
         id: nextId,
         type: 'Water',
         issue: 'New work order',
-        location: 'Enter location',
+        location: '',
         date: new Date().toISOString().slice(0, 10),
         number811: '',
         status: 'Open',
@@ -831,6 +1070,7 @@
         archived: false
       });
       selectedId = nextId;
+      markDirty();
       renderTable();
       openDrawer(nextId);
     });
@@ -850,6 +1090,7 @@
       const item = workOrders.find(entry => entry.id === selectedId);
       if (!item) return;
       item.rowColor = '';
+      markDirty();
       renderTable();
     });
 
@@ -861,8 +1102,10 @@
       button.addEventListener('click', () => {
         if (contextRowId == null) return;
         const item = workOrders.find(entry => entry.id === contextRowId);
+        if (!item) return;
         item.rowColor = button.dataset.color;
         closeContextMenu();
+        markDirty();
         renderTable();
       });
     });
@@ -884,11 +1127,11 @@
         saveDatabaseBtn.textContent = 'Saving…';
         await saveToApi();
       } catch (error) {
-        updateSaveStatus(`Save failed: ${error.message}`);
+        setStatus('Save failed — is app.py running?', 'error');
         alert(`Save failed: ${error.message}`);
       } finally {
         saveDatabaseBtn.disabled = false;
-        saveDatabaseBtn.textContent = 'Save';
+        saveDatabaseBtn.textContent = 'Save to Database';
       }
     });
 
