@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Work Order Dashboard</title>
+  <title>Water & Sewer Work Order Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
@@ -21,24 +21,26 @@
       --space-5: 1.25rem;
       --space-6: 1.5rem;
       --space-8: 2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
       --radius-sm: 0.375rem;
       --radius-md: 0.5rem;
       --radius-lg: 0.75rem;
       --radius-xl: 1rem;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
-      --shadow-md: 0 10px 24px rgba(0,0,0,.25);
-      --color-bg: #000000;
-      --color-surface: #07090c;
-      --color-surface-2: #101319;
-      --color-surface-3: #181d24;
-      --color-border: rgba(255,255,255,0.1);
-      --color-divider: rgba(255,255,255,0.08);
+      --shadow-md: 0 10px 24px rgba(0,0,0,.28);
+      --color-bg: #07090c;
+      --color-surface: #11151a;
+      --color-surface-2: #171d24;
+      --color-surface-3: #202832;
+      --color-border: rgba(255,255,255,.12);
+      --color-divider: rgba(255,255,255,.08);
       --color-text: #f3f5f7;
       --color-text-muted: #b9c0c8;
       --color-text-faint: #8f98a2;
       --color-accent: #58a6ff;
+      --color-water: #4bb8ff;
+      --color-sewer: #36c497;
+      --color-danger: #ff7b86;
+      --color-warning: #f5c45b;
       --row-red: #8f1b28;
       --row-yellow: #665216;
       --row-green: #1f4d34;
@@ -46,19 +48,27 @@
       --row-purple: #443064;
       --row-gray: #30353b;
       --focus: #8ab4ff;
-      --font-body: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-display: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    * { box-sizing: border-box; }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
+      background:
+        radial-gradient(circle at top right, rgba(88,166,255,.11), transparent 35%),
+        radial-gradient(circle at bottom left, rgba(54,196,151,.08), transparent 34%),
+        var(--color-bg);
+      color: var(--color-text);
       font-family: var(--font-body);
       font-size: var(--text-base);
-      color: var(--color-text);
-      background-color: var(--color-bg);
     }
 
     .app {
@@ -70,7 +80,7 @@
     }
 
     .panel {
-      background: rgba(29,32,35,0.94);
+      background: rgba(19,24,30,.94);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-sm);
@@ -78,49 +88,84 @@
     }
 
     .header {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-      padding: var(--space-5) var(--space-6);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-6);
       align-items: center;
-      text-align: center;
+      padding: var(--space-6);
+    }
+
+    .eyebrow {
+      margin: 0 0 var(--space-2);
+      color: var(--color-accent);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
     }
 
     .title-block h1 {
       margin: 0;
+      font-family: var(--font-display);
       font-size: var(--text-xl);
-      line-height: 1.1;
-      font-weight: 800;
-      letter-spacing: -0.04em;
+      letter-spacing: -.03em;
+      line-height: 1;
       text-transform: uppercase;
     }
 
     .title-block p {
+      max-width: 65ch;
       margin: var(--space-2) 0 0;
       color: var(--color-text-muted);
-      max-width: 60ch;
+      font-size: var(--text-sm);
+    }
+
+    .report-status {
+      min-width: 195px;
+      padding: var(--space-4);
+      border: 1px solid rgba(88,166,255,.27);
+      border-radius: var(--radius-lg);
+      background: rgba(88,166,255,.08);
+    }
+
+    .report-status strong,
+    .report-status span {
+      display: block;
+    }
+
+    .report-status strong {
+      color: #dcecff;
+      font-size: var(--text-sm);
+    }
+
+    .report-status span {
+      margin-top: var(--space-1);
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
     }
 
     .meta {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: var(--space-3);
+      margin-top: var(--space-4);
     }
 
     .stat {
       padding: var(--space-4);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,.025);
     }
 
     .stat-label {
       display: block;
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--color-text-faint);
       margin-bottom: var(--space-2);
+      color: var(--color-text-faint);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
     }
 
     .stat-value {
@@ -137,68 +182,102 @@
       padding: var(--space-4) var(--space-5);
     }
 
-    .toolbar-group {
+    .toolbar-group,
+    .selection-toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-3);
       align-items: center;
     }
 
-    .chip, .button, .search, select, input, textarea {
+    .selection-toolbar {
+      width: 100%;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-divider);
+    }
+
+    .selection-summary {
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+
+    .chip,
+    .button,
+    .search,
+    select,
+    input,
+    textarea {
+      min-height: 42px;
       border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       background: var(--color-surface-2);
       color: var(--color-text);
-      border-radius: var(--radius-md);
-      min-height: 44px;
-      padding: 0 var(--space-4);
       font: inherit;
     }
 
-    .chip {
+    .chip,
+    .button {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
+      padding: 0 var(--space-4);
       cursor: pointer;
-      transition: 180ms ease;
+      font-weight: 700;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .chip:hover,
+    .button:hover,
+    .icon-btn:hover {
+      transform: translateY(-1px);
     }
 
     .chip.active {
-      background: rgba(88,166,255,0.18);
-      border-color: rgba(88,166,255,0.4);
-      color: #dcecff;
-    }
-
-    .button {
-      cursor: pointer;
-      font-weight: 700;
+      border-color: rgba(88,166,255,.58);
+      background: rgba(88,166,255,.18);
+      color: #e5f1ff;
     }
 
     .button.primary {
-      background: linear-gradient(180deg, #4389e2 0%, #296fc9 100%);
-      border-color: rgba(255,255,255,0.12);
+      border-color: rgba(88,166,255,.55);
+      background: linear-gradient(180deg, #4e95ed, #2971cb);
+      color: #fff;
+    }
+
+    .button.supervisor {
+      border-color: rgba(54,196,151,.58);
+      background: linear-gradient(180deg, #3fcfa0, #208a68);
+      color: #061d15;
     }
 
     .button.ghost {
       background: transparent;
     }
 
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+      transform: none;
+    }
+
     .search {
-      min-width: 260px;
+      min-width: 250px;
+      padding: 0 var(--space-4);
     }
 
     .table-wrap {
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: 1fr;
       min-height: 0;
+      overflow: hidden;
     }
 
     .table-scroller {
       overflow: auto;
-      border-radius: var(--radius-xl);
+      max-height: calc(100vh - 320px);
     }
 
     table {
       width: 100%;
+      min-width: 1050px;
       border-collapse: collapse;
       table-layout: fixed;
     }
@@ -207,51 +286,89 @@
       position: sticky;
       top: 0;
       z-index: 2;
-      background: rgba(20,22,24,0.98);
-      color: var(--color-text-muted);
-      text-align: left;
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
       padding: var(--space-4);
       border-bottom: 1px solid var(--color-border);
+      background: rgba(21,26,33,.98);
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
+      letter-spacing: .08em;
+      text-align: left;
+      text-transform: uppercase;
     }
 
     tbody td {
       padding: var(--space-4);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      vertical-align: middle;
-      color: var(--color-text);
+      border-bottom: 1px solid var(--color-divider);
       overflow: hidden;
+      color: var(--color-text);
       text-overflow: ellipsis;
+      vertical-align: middle;
       white-space: nowrap;
     }
 
     tbody tr {
-      background: rgba(255,255,255,0.02);
-      transition: background-color 160ms ease;
+      background: rgba(255,255,255,.015);
+      transition: background .16s ease;
     }
 
     tbody tr:hover {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,.05);
     }
 
     tbody tr.selected {
-      outline: 2px solid rgba(138,180,255,0.55);
+      outline: 2px solid rgba(88,166,255,.72);
       outline-offset: -2px;
     }
 
-    .type-pill {
+    .select-cell {
+      width: 50px;
+      text-align: center;
+    }
+
+    .row-select,
+    #selectAllVisible {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--color-accent);
+      cursor: pointer;
+    }
+
+    .type-pill,
+    .status-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 76px;
-      padding: 0.45rem 0.75rem;
+      min-width: 74px;
+      padding: .4rem .7rem;
       border-radius: 999px;
-      background: rgba(255,255,255,0.1);
-      font-size: var(--text-sm);
+      font-size: var(--text-xs);
       font-weight: 700;
+      white-space: nowrap;
     }
+
+    .type-pill.water {
+      border: 1px solid rgba(75,184,255,.45);
+      background: rgba(75,184,255,.14);
+      color: #b9e5ff;
+    }
+
+    .type-pill.sewer {
+      border: 1px solid rgba(54,196,151,.45);
+      background: rgba(54,196,151,.14);
+      color: #bdf7df;
+    }
+
+    .status-pill {
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.07);
+      color: var(--color-text-muted);
+    }
+
+    .status-pill.open { color: #ffc3c8; border-color: rgba(255,123,134,.35); background: rgba(255,123,134,.1); }
+    .status-pill.scheduled,
+    .status-pill.planned { color: #cde4ff; border-color: rgba(88,166,255,.35); background: rgba(88,166,255,.1); }
+    .status-pill.on-hold { color: #ffe3a0; border-color: rgba(245,196,91,.35); background: rgba(245,196,91,.1); }
+    .status-pill.completed { color: #bdf7df; border-color: rgba(54,196,151,.35); background: rgba(54,196,151,.1); }
 
     .muted { color: var(--color-text-muted); }
 
@@ -262,52 +379,63 @@
     }
 
     .icon-btn {
-      min-width: 44px;
-      min-height: 44px;
-      border-radius: var(--radius-md);
+      min-height: 38px;
+      padding: 0 .8rem;
       border: 1px solid var(--color-border);
-      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.03);
       color: var(--color-text);
       cursor: pointer;
+      font: inherit;
+      font-size: var(--text-xs);
       font-weight: 700;
+      transition: background .16s ease, transform .16s ease;
+    }
+
+    .empty-row td {
+      padding: var(--space-8);
+      color: var(--color-text-faint);
+      text-align: center;
+      white-space: normal;
     }
 
     .drawer {
       position: fixed;
+      z-index: 20;
       top: 0;
       right: 0;
-      width: min(440px, 100%);
-      height: 100vh;
-      background: rgba(24,27,30,0.98);
-      border-left: 1px solid var(--color-border);
-      box-shadow: var(--shadow-md);
-      transform: translateX(100%);
-      transition: transform 220ms ease;
-      z-index: 20;
       display: grid;
       grid-template-rows: auto 1fr auto;
+      width: min(460px, 100%);
+      height: 100vh;
+      border-left: 1px solid var(--color-border);
+      background: rgba(23,28,35,.985);
+      box-shadow: var(--shadow-md);
+      transform: translateX(100%);
+      transition: transform .22s ease;
     }
 
     .drawer.open { transform: translateX(0); }
 
-    .drawer-header, .drawer-footer {
+    .drawer-header,
+    .drawer-footer {
       padding: var(--space-5);
       border-bottom: 1px solid var(--color-divider);
     }
 
     .drawer-footer {
-      border-bottom: 0;
-      border-top: 1px solid var(--color-divider);
       display: flex;
       gap: var(--space-3);
       justify-content: flex-end;
+      border-top: 1px solid var(--color-divider);
+      border-bottom: 0;
     }
 
     .drawer-body {
-      overflow: auto;
-      padding: var(--space-5);
       display: grid;
       gap: var(--space-4);
+      overflow: auto;
+      padding: var(--space-5);
       align-content: start;
     }
 
@@ -317,9 +445,16 @@
     }
 
     label {
-      font-size: var(--text-sm);
       color: var(--color-text-muted);
+      font-size: var(--text-sm);
       font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0 var(--space-3);
     }
 
     textarea {
@@ -328,129 +463,141 @@
       resize: vertical;
     }
 
-    input:focus, textarea:focus, select:focus, .button:focus, .icon-btn:focus, .chip:focus {
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
-    }
-
     .context-menu {
       position: fixed;
-      min-width: 220px;
-      background: rgba(27,30,34,0.98);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-      padding: var(--space-2);
       z-index: 30;
       display: none;
+      min-width: 220px;
+      padding: var(--space-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: rgba(27,31,38,.99);
+      box-shadow: var(--shadow-md);
     }
 
     .context-menu.open { display: block; }
 
     .menu-title {
       padding: var(--space-2) var(--space-3);
-      font-size: var(--text-xs);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
       color: var(--color-text-faint);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
     }
 
     .menu-item {
-      width: 100%;
       display: flex;
+      width: 100%;
       align-items: center;
       gap: var(--space-3);
-      padding: 0.8rem 0.9rem;
+      padding: .75rem .8rem;
       border: 0;
+      border-radius: var(--radius-md);
       background: transparent;
       color: var(--color-text);
-      border-radius: var(--radius-md);
       cursor: pointer;
-      text-align: left;
       font: inherit;
+      text-align: left;
     }
 
-    .menu-item:hover, .menu-item:focus {
-      background: rgba(255,255,255,0.06);
-      outline: none;
-    }
+    .menu-item:hover { background: rgba(255,255,255,.07); }
 
     .swatch {
       width: 18px;
       height: 18px;
+      border: 1px solid rgba(255,255,255,.25);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.25);
       flex: 0 0 auto;
-    }
-
-    .hint {
-      color: var(--color-text-faint);
-      font-size: var(--text-sm);
     }
 
     .overlay {
       position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      display: none;
       z-index: 10;
+      inset: 0;
+      display: none;
+      background: rgba(0,0,0,.48);
     }
 
     .overlay.open { display: block; }
 
-    @media (max-width: 1080px) {
+    .hint {
+      margin: .35rem 0 0;
+      color: var(--color-text-faint);
+      font-size: var(--text-sm);
+    }
+
+    @media (max-width: 1120px) {
       .header { grid-template-columns: 1fr; }
+      .report-status { width: 100%; }
       .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .search { min-width: 100%; }
-      table { min-width: 980px; }
+      .search { width: 100%; }
     }
   </style>
 </head>
 <body>
   <a href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to content</a>
+
   <div class="app">
     <header class="panel header">
       <div class="title-block">
-        <h1>Work Orders Board</h1>
+        <p class="eyebrow">Public Works Operations</p>
+        <h1>Water &amp; Sewer Work Orders</h1>
+        <p>Supervisor work queue for coordinating active utility jobs, prioritizing response, and preparing field-ready work-order packets.</p>
+
+        <div class="meta" aria-label="Dashboard summary">
+          <div class="stat"><span class="stat-label">Open Jobs</span><span class="stat-value" id="stat-open">0</span></div>
+          <div class="stat"><span class="stat-label">Water &amp; Sewer</span><span class="stat-value" id="stat-water-sewer">0</span></div>
+          <div class="stat"><span class="stat-label">Water</span><span class="stat-value" id="stat-water">0</span></div>
+          <div class="stat"><span class="stat-label">Sewer</span><span class="stat-value" id="stat-sewer">0</span></div>
+          <div class="stat"><span class="stat-label">Archived</span><span class="stat-value" id="stat-archived">0</span></div>
+        </div>
       </div>
-      <div class="meta" aria-label="Dashboard summary">
-        <div class="stat"><span class="stat-label">Open Jobs</span><span class="stat-value" id="stat-open">0</span></div>
-        <div class="stat"><span class="stat-label">Water</span><span class="stat-value" id="stat-water">0</span></div>
-        <div class="stat"><span class="stat-label">Sewer</span><span class="stat-value" id="stat-sewer">0</span></div>
-        <div class="stat"><span class="stat-label">Archived</span><span class="stat-value" id="stat-archived">0</span></div>
-        <div class="stat"><span class="stat-label">Last Updated</span><span class="stat-value" id="stat-updated">--</span></div>
+
+      <div class="report-status" aria-live="polite">
+        <strong id="reportDate">Loading…</strong>
+        <span id="reportSubline">Supervisor export ready</span>
       </div>
     </header>
 
-    <section class="panel toolbar" aria-label="Filters and actions">
+    <section class="panel toolbar" aria-label="Work order controls">
       <div class="toolbar-group" role="group" aria-label="Type filters">
-        <button class="chip active" data-filter-type="all">All</button>
+        <button class="chip active" data-filter-type="all">All Active</button>
+        <button class="chip" data-filter-type="water-sewer">Water &amp; Sewer</button>
         <button class="chip" data-filter-type="Water">Water</button>
         <button class="chip" data-filter-type="Sewer">Sewer</button>
       </div>
+
       <div class="toolbar-group">
-        <input id="searchInput" class="search" type="search" placeholder="Search issue, location, or 811 number" aria-label="Search work orders" />
+        <input id="searchInput" class="search" type="search" placeholder="Search issue, location, status, notes, or 811 number" aria-label="Search work orders" />
         <button class="chip" id="archiveToggleBtn" aria-pressed="false">Show Archive</button>
-        <button class="button ghost" id="clearColorsBtn">Clear Selected Row Color</button>
         <button class="button ghost" id="exportBtn">Export Data</button>
-        <label class="button ghost" for="importFile" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">Import Data</label>
+        <label class="button ghost" for="importFile" style="cursor:pointer;">Import Data</label>
         <input id="importFile" type="file" accept="application/json" hidden />
         <button class="button primary" id="newOrderBtn">+ New Work Order</button>
+      </div>
+
+      <div class="selection-toolbar" aria-label="Supervisor export controls">
+        <button class="button ghost" id="selectVisibleBtn">Select Visible</button>
+        <button class="button ghost" id="clearSelectionBtn">Clear Selection</button>
+        <span class="selection-summary" id="selectionSummary">No work orders selected. Export will use the current view.</span>
+        <button class="button supervisor" id="supervisorExportBtn">Supervisor PDF Export</button>
       </div>
     </section>
 
     <main id="main" class="panel table-wrap">
       <div class="table-scroller">
-        <table aria-label="Work orders table">
+        <table aria-label="Water and sewer work orders">
           <thead>
             <tr>
+              <th class="select-cell"><input type="checkbox" id="selectAllVisible" aria-label="Select all visible work orders"></th>
               <th style="width: 9rem;">Type</th>
               <th style="width: 18rem;">Issue</th>
               <th style="width: 15rem;">Location</th>
-              <th style="width: 10rem;">Date</th>
+              <th style="width: 9rem;">Date</th>
               <th style="width: 11rem;">811 Number</th>
-              <th>Status</th>
-              <th style="width: 15rem;">Actions</th>
+              <th style="width: 10rem;">Status</th>
+              <th style="width: 13rem;">Actions</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -463,12 +610,13 @@
 
   <aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawerTitle">
     <div class="drawer-header">
-      <h2 id="drawerTitle" style="margin:0 0 .35rem;font-size:var(--text-lg);">Edit Work Order</h2>
-      <p class="hint" style="margin:0;">Update details here. Right-click the row in the table to set a full-row color.</p>
+      <h2 id="drawerTitle" style="margin:0;font-family:var(--font-display);font-size:var(--text-lg);">Edit Work Order</h2>
+      <p class="hint">Update details here. Right-click a row to set its supervisor priority color.</p>
     </div>
+
     <div class="drawer-body">
       <div class="field">
-        <label for="fieldType">Type</label>
+        <label for="fieldType">Service Type</label>
         <select id="fieldType">
           <option>Water</option>
           <option>Sewer</option>
@@ -492,121 +640,201 @@
       </div>
       <div class="field">
         <label for="fieldStatus">Status</label>
-        <input id="fieldStatus" type="text" />
+        <input id="fieldStatus" type="text" placeholder="Open, Scheduled, On Hold, or Completed" />
       </div>
       <div class="field">
-        <label for="fieldNotes">Notes</label>
+        <label for="fieldNotes">Supervisor / Crew Notes</label>
         <textarea id="fieldNotes"></textarea>
       </div>
     </div>
+
     <div class="drawer-footer">
       <button class="button ghost" id="cancelBtn">Cancel</button>
       <button class="button primary" id="saveBtn">Save Changes</button>
     </div>
   </aside>
 
-  <div class="context-menu" id="contextMenu" role="menu" aria-label="Row color menu">
-    <div class="menu-title">Row color</div>
-    <button class="menu-item" data-color=""><span class="swatch" style="background: var(--row-gray);"></span>Default</button>
-    <button class="menu-item" data-color="var(--row-red)"><span class="swatch" style="background: var(--row-red);"></span>Red tone</button>
-    <button class="menu-item" data-color="var(--row-yellow)"><span class="swatch" style="background: var(--row-yellow);"></span>Yellow tone</button>
-    <button class="menu-item" data-color="var(--row-green)"><span class="swatch" style="background: var(--row-green);"></span>Green tone</button>
-    <button class="menu-item" data-color="var(--row-blue)"><span class="swatch" style="background: var(--row-blue);"></span>Blue tone</button>
-    <button class="menu-item" data-color="var(--row-purple)"><span class="swatch" style="background: var(--row-purple);"></span>Purple tone</button>
+  <div class="context-menu" id="contextMenu" role="menu" aria-label="Row priority color menu">
+    <div class="menu-title">Supervisor priority color</div>
+    <button class="menu-item" data-color=""><span class="swatch" style="background:var(--row-gray);"></span>Default</button>
+    <button class="menu-item" data-color="var(--row-red)"><span class="swatch" style="background:var(--row-red);"></span>Red — urgent</button>
+    <button class="menu-item" data-color="var(--row-yellow)"><span class="swatch" style="background:var(--row-yellow);"></span>Yellow — waiting</button>
+    <button class="menu-item" data-color="var(--row-green)"><span class="swatch" style="background:var(--row-green);"></span>Green — on track</button>
+    <button class="menu-item" data-color="var(--row-blue)"><span class="swatch" style="background:var(--row-blue);"></span>Blue — scheduled</button>
+    <button class="menu-item" data-color="var(--row-purple)"><span class="swatch" style="background:var(--row-purple);"></span>Purple — review</button>
   </div>
 
   <script>
+    "use strict";
+
     const workOrders = [
-      { id: 1, type: 'Water', issue: '8-inch main leak', location: 'Pine St & 3rd Ave', date: '2026-08-03', number811: '81124561', status: 'Open', notes: 'Traffic cones placed. Waiting on lane closure.', rowColor: 'var(--row-red)', archived: false },
-      { id: 2, type: 'Sewer', issue: 'Manhole overflow', location: 'Maple Ave Lift Station', date: '2026-08-03', number811: '81124562', status: 'Scheduled', notes: 'Pump truck requested for afternoon.', rowColor: 'var(--row-yellow)', archived: false },
-      { id: 3, type: 'Water', issue: 'Valve inspection', location: 'Well Rd Tank Site', date: '2026-08-02', number811: '81124548', status: 'Planned', notes: 'Routine inspection before weekend work.', rowColor: 'var(--row-green)', archived: false },
-      { id: 4, type: 'Sewer', issue: 'Line backup complaint', location: 'Jefferson Ct', date: '2026-08-01', number811: '81124531', status: 'Open', notes: 'Resident requested callback after service.', rowColor: '', archived: false },
-      { id: 5, type: 'Water', issue: 'Hydrant replacement', location: 'Oak Dr near school', date: '2026-08-04', number811: '81124580', status: 'On Hold', notes: 'Material delivery expected tomorrow morning.', rowColor: '', archived: false }
+      { id: 1, type: "Water", issue: "8-inch main leak", location: "Pine St & 3rd Ave", date: "2026-08-03", number811: "81124561", status: "Open", notes: "Traffic cones placed. Waiting on lane closure.", rowColor: "var(--row-red)", archived: false },
+      { id: 2, type: "Sewer", issue: "Manhole overflow", location: "Maple Ave Lift Station", date: "2026-08-03", number811: "81124562", status: "Scheduled", notes: "Pump truck requested for afternoon.", rowColor: "var(--row-yellow)", archived: false },
+      { id: 3, type: "Water", issue: "Valve inspection", location: "Well Rd Tank Site", date: "2026-08-02", number811: "81124548", status: "Planned", notes: "Routine inspection before weekend work.", rowColor: "var(--row-green)", archived: false },
+      { id: 4, type: "Sewer", issue: "Line backup complaint", location: "Jefferson Ct", date: "2026-08-01", number811: "81124531", status: "Open", notes: "Resident requested callback after service.", rowColor: "", archived: false },
+      { id: 5, type: "Water", issue: "Hydrant replacement", location: "Oak Dr near school", date: "2026-08-04", number811: "81124580", status: "On Hold", notes: "Material delivery expected tomorrow morning.", rowColor: "", archived: false }
     ];
 
-    let currentFilter = 'all';
-    let currentSearch = '';
+    let currentFilter = "all";
+    let currentSearch = "";
     let selectedId = null;
     let editingId = null;
     let contextRowId = null;
     let showArchive = false;
+    const selectedWorkOrderIds = new Set();
 
-    const tableBody = document.getElementById('tableBody');
-    const chips = [...document.querySelectorAll('[data-filter-type]')];
-    const searchInput = document.getElementById('searchInput');
-    const drawer = document.getElementById('drawer');
-    const overlay = document.getElementById('overlay');
-    const contextMenu = document.getElementById('contextMenu');
+    const tableBody = document.getElementById("tableBody");
+    const chips = [...document.querySelectorAll("[data-filter-type]")];
+    const searchInput = document.getElementById("searchInput");
+    const drawer = document.getElementById("drawer");
+    const overlay = document.getElementById("overlay");
+    const contextMenu = document.getElementById("contextMenu");
+    const selectAllVisible = document.getElementById("selectAllVisible");
+    const selectionSummary = document.getElementById("selectionSummary");
 
     const fields = {
-      type: document.getElementById('fieldType'),
-      issue: document.getElementById('fieldIssue'),
-      location: document.getElementById('fieldLocation'),
-      date: document.getElementById('fieldDate'),
-      number811: document.getElementById('field811'),
-      status: document.getElementById('fieldStatus'),
-      assignedTo: document.getElementById('fieldAssigned'),
-      notes: document.getElementById('fieldNotes')
+      type: document.getElementById("fieldType"),
+      issue: document.getElementById("fieldIssue"),
+      location: document.getElementById("fieldLocation"),
+      date: document.getElementById("fieldDate"),
+      number811: document.getElementById("field811"),
+      status: document.getElementById("fieldStatus"),
+      notes: document.getElementById("fieldNotes")
     };
 
-    function formatDate(iso) {
-      if (!iso) return '';
-      const [y, m, d] = iso.split('-');
-      return `${m}/${d}/${y.slice(2)}`;
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
-    function refreshStats(data) {
-      document.getElementById('stat-open').textContent = data.length;
-      document.getElementById('stat-water').textContent = data.filter(item => item.type === 'Water').length;
-      document.getElementById('stat-sewer').textContent = data.filter(item => item.type === 'Sewer').length;
-      document.getElementById('stat-archived').textContent = workOrders.filter(item => item.archived).length;
-      const now = new Date();
-      const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      const date = now.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
-      document.getElementById('stat-updated').textContent = date + '  ' + time;
+    function formatDate(iso) {
+      if (!iso) return "—";
+      const parts = iso.split("-");
+      if (parts.length !== 3) return iso;
+      return `${parts[1]}/${parts[2]}/${parts[0]}`;
+    }
+
+    function formatReportDate(date = new Date()) {
+      return date.toLocaleString([], {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function statusClass(status) {
+      return String(status || "")
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-");
+    }
+
+    function typeMatchesFilter(item) {
+      if (currentFilter === "all") return true;
+      if (currentFilter === "water-sewer") return item.type === "Water" || item.type === "Sewer";
+      return item.type === currentFilter;
     }
 
     function getFilteredData() {
       return workOrders.filter(item => {
-        const typePass = currentFilter === 'all' || item.type === currentFilter;
+        const typePass = typeMatchesFilter(item);
         const archivePass = showArchive ? item.archived : !item.archived;
-        const searchBlob = `${item.type} ${item.issue} ${item.location} ${item.number811} ${item.status}`.toLowerCase();
-        const searchPass = !currentSearch || searchBlob.includes(currentSearch);
-        return typePass && archivePass && searchPass;
+        const searchBlob = `${item.type} ${item.issue} ${item.location} ${item.number811} ${item.status} ${item.notes}`.toLowerCase();
+        return typePass && archivePass && (!currentSearch || searchBlob.includes(currentSearch));
       });
+    }
+
+    function refreshClock() {
+      document.getElementById("reportDate").textContent = formatReportDate();
+      document.getElementById("reportSubline").textContent =
+        `${selectedWorkOrderIds.size} selected · ${showArchive ? "archive view" : "active view"}`;
+    }
+
+    function refreshStats() {
+      const active = workOrders.filter(item => !item.archived);
+      const water = active.filter(item => item.type === "Water");
+      const sewer = active.filter(item => item.type === "Sewer");
+
+      document.getElementById("stat-open").textContent = active.length;
+      document.getElementById("stat-water-sewer").textContent = water.length + sewer.length;
+      document.getElementById("stat-water").textContent = water.length;
+      document.getElementById("stat-sewer").textContent = sewer.length;
+      document.getElementById("stat-archived").textContent = workOrders.filter(item => item.archived).length;
+    }
+
+    function refreshSelectionSummary(filtered) {
+      const selectedCount = selectedWorkOrderIds.size;
+      const visibleSelected = filtered.filter(item => selectedWorkOrderIds.has(item.id)).length;
+
+      if (selectedCount) {
+        selectionSummary.textContent =
+          `${selectedCount} selected${visibleSelected !== selectedCount ? ` · ${visibleSelected} visible in this view` : ""}. Supervisor PDF will include selected orders.`;
+      } else {
+        selectionSummary.textContent =
+          `No work orders selected. Supervisor PDF will include ${filtered.length} order${filtered.length === 1 ? "" : "s"} in the current view.`;
+      }
+
+      selectAllVisible.checked = filtered.length > 0 && filtered.every(item => selectedWorkOrderIds.has(item.id));
+      selectAllVisible.indeterminate = visibleSelected > 0 && visibleSelected < filtered.length;
+      refreshClock();
     }
 
     function renderTable() {
       const filtered = getFilteredData();
-      refreshStats(filtered);
-      tableBody.innerHTML = '';
+      refreshStats();
+      tableBody.innerHTML = "";
+
+      if (!filtered.length) {
+        tableBody.innerHTML = `<tr class="empty-row"><td colspan="8">No work orders match the current supervisor view.</td></tr>`;
+        refreshSelectionSummary(filtered);
+        return;
+      }
 
       filtered.forEach(item => {
-        const tr = document.createElement('tr');
+        const tr = document.createElement("tr");
         tr.dataset.id = item.id;
-        if (item.rowColor) tr.style.background = `color-mix(in srgb, ${item.rowColor} 82%, #1b1e22)`;
-        if (selectedId === item.id) tr.classList.add('selected');
+
+        if (item.rowColor) {
+          tr.style.background = `color-mix(in srgb, ${item.rowColor} 76%, #1b1e22)`;
+        }
+
+        if (selectedId === item.id) tr.classList.add("selected");
+
+        const typeClass = item.type === "Sewer" ? "sewer" : "water";
+        const currentStatusClass = statusClass(item.status);
+
         tr.innerHTML = `
-          <td><span class="type-pill">${item.type}</span></td>
-          <td title="${item.issue}">${item.issue}</td>
-          <td title="${item.location}">${item.location}</td>
-          <td class="muted">${formatDate(item.date)}</td>
-          <td>${item.number811}</td>
-          <td title="${item.status}">${item.status}</td>
+          <td class="select-cell">
+            <input class="row-select" type="checkbox" data-select="${item.id}" aria-label="Select work order ${item.id}" ${selectedWorkOrderIds.has(item.id) ? "checked" : ""}>
+          </td>
+          <td><span class="type-pill ${typeClass}">${escapeHtml(item.type)}</span></td>
+          <td title="${escapeHtml(item.issue)}">${escapeHtml(item.issue)}</td>
+          <td title="${escapeHtml(item.location)}">${escapeHtml(item.location)}</td>
+          <td class="muted">${escapeHtml(formatDate(item.date))}</td>
+          <td>${escapeHtml(item.number811 || "—")}</td>
+          <td><span class="status-pill ${currentStatusClass}">${escapeHtml(item.status || "Open")}</span></td>
           <td>
             <div class="actions">
-              <button class="icon-btn" aria-label="Edit work order" data-edit="${item.id}">Edit</button>
-              <button class="icon-btn" aria-label="${item.archived ? 'Restore work order' : 'Complete work order'}" data-complete="${item.id}">${item.archived ? 'Restore' : 'Complete'}</button>
+              <button class="icon-btn" data-edit="${item.id}" aria-label="Edit work order ${item.id}">Edit</button>
+              <button class="icon-btn" data-complete="${item.id}" aria-label="${item.archived ? "Restore" : "Complete"} work order ${item.id}">
+                ${item.archived ? "Restore" : "Complete"}
+              </button>
             </div>
           </td>
         `;
 
-        tr.addEventListener('click', () => {
+        tr.addEventListener("click", () => {
           selectedId = item.id;
           renderTable();
         });
 
-        tr.addEventListener('contextmenu', (event) => {
+        tr.addEventListener("contextmenu", event => {
           event.preventDefault();
           selectedId = item.id;
           contextRowId = item.id;
@@ -617,50 +845,83 @@
         tableBody.appendChild(tr);
       });
 
-      tableBody.querySelectorAll('[data-edit]').forEach(btn => {
-        btn.addEventListener('click', (event) => {
+      tableBody.querySelectorAll("[data-select]").forEach(box => {
+        box.addEventListener("click", event => event.stopPropagation());
+        box.addEventListener("change", event => {
+          const id = Number(event.target.dataset.select);
+          if (event.target.checked) selectedWorkOrderIds.add(id);
+          else selectedWorkOrderIds.delete(id);
+          refreshSelectionSummary(getFilteredData());
+        });
+      });
+
+      tableBody.querySelectorAll("[data-edit]").forEach(btn => {
+        btn.addEventListener("click", event => {
           event.stopPropagation();
           openDrawer(Number(btn.dataset.edit));
         });
       });
 
-      tableBody.querySelectorAll('[data-complete]').forEach(btn => {
-        btn.addEventListener('click', (event) => {
+      tableBody.querySelectorAll("[data-complete]").forEach(btn => {
+        btn.addEventListener("click", event => {
           event.stopPropagation();
           const item = workOrders.find(entry => entry.id === Number(btn.dataset.complete));
           if (!item) return;
           item.archived = !item.archived;
-          item.status = item.archived ? 'Completed' : 'Open';
-          if (selectedId === item.id && !showArchive && item.archived) selectedId = null;
+          item.status = item.archived ? "Completed" : "Open";
+          if (item.archived) selectedWorkOrderIds.delete(item.id);
           renderTable();
         });
       });
+
+      refreshSelectionSummary(filtered);
     }
 
     function openDrawer(id) {
-      editingId = id;
       const item = workOrders.find(entry => entry.id === id);
-      fields.type.value = item.type;
-      fields.issue.value = item.issue;
-      fields.location.value = item.location;
-      fields.date.value = item.date;
-      fields.number811.value = item.number811;
-      fields.status.value = item.status;
-      fields.notes.value = item.notes;
-      drawer.classList.add('open');
-      drawer.setAttribute('aria-hidden', 'false');
-      overlay.classList.add('open');
+      if (!item) return;
+
+      editingId = id;
+      fields.type.value = item.type === "Sewer" ? "Sewer" : "Water";
+      fields.issue.value = item.issue || "";
+      fields.location.value = item.location || "";
+      fields.date.value = item.date || "";
+      fields.number811.value = item.number811 || "";
+      fields.status.value = item.status || "";
+      fields.notes.value = item.notes || "";
+
+      drawer.classList.add("open");
+      drawer.setAttribute("aria-hidden", "false");
+      overlay.classList.add("open");
+      fields.issue.focus();
     }
 
     function closeDrawer() {
-      drawer.classList.remove('open');
-      drawer.setAttribute('aria-hidden', 'true');
-      overlay.classList.remove('open');
+      drawer.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+      overlay.classList.remove("open");
       editingId = null;
     }
 
+    function saveCurrentEdit() {
+      if (editingId === null) return;
+      const item = workOrders.find(entry => entry.id === editingId);
+      if (!item) return;
+
+      item.type = fields.type.value;
+      item.issue = fields.issue.value.trim() || "Untitled work order";
+      item.location = fields.location.value.trim();
+      item.date = fields.date.value;
+      item.number811 = fields.number811.value.trim();
+      item.status = fields.status.value.trim() || "Open";
+      item.notes = fields.notes.value.trim();
+
+      closeDrawer();
+      renderTable();
+    }
+
     function openContextMenu(x, y) {
-      contextMenu.classList.add('open');
+      contextMenu.classList.add("open");
       const maxX = window.innerWidth - contextMenu.offsetWidth - 12;
       const maxY = window.innerHeight - contextMenu.offsetHeight - 12;
       contextMenu.style.left = `${Math.max(12, Math.min(x, maxX))}px`;
@@ -668,42 +929,14 @@
     }
 
     function closeContextMenu() {
-      contextMenu.classList.remove('open');
+      contextMenu.classList.remove("open");
     }
-
-    function saveCurrentEdit() {
-      if (editingId == null) return;
-      const item = workOrders.find(entry => entry.id === editingId);
-      item.type = fields.type.value;
-      item.issue = fields.issue.value.trim();
-      item.location = fields.location.value.trim();
-      item.date = fields.date.value;
-      item.number811 = fields.number811.value.trim();
-      item.status = fields.status.value.trim();
-      item.notes = fields.notes.value.trim();
-      closeDrawer();
-      renderTable();
-    }
-
-    chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        currentFilter = chip.dataset.filterType;
-        renderTable();
-      });
-    });
-
-    searchInput.addEventListener('input', () => {
-      currentSearch = searchInput.value.toLowerCase().trim();
-      renderTable();
-    });
 
     function exportData() {
-      const blob = new Blob([JSON.stringify(workOrders, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
+      const blob = new Blob([JSON.stringify(workOrders, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = 'work-orders-data.json';
+      a.download = "water-sewer-work-orders.json";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -713,52 +946,260 @@
     function importData(file) {
       if (!file) return;
       const reader = new FileReader();
+
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed)) throw new Error('Invalid file format');
+          if (!Array.isArray(parsed)) throw new Error("Invalid format");
+
           workOrders.length = 0;
-          parsed.forEach(item => workOrders.push({
-            id: Number(item.id) || Date.now() + Math.random(),
-            type: item.type === 'Sewer' ? 'Sewer' : 'Water',
-            issue: item.issue || '',
-            location: item.location || '',
-            date: item.date || new Date().toISOString().slice(0, 10),
-            number811: item.number811 || '',
-            status: item.status || 'Open',
-            assignedTo: item.assignedTo || '',
-            notes: item.notes || '',
-            rowColor: item.rowColor || '',
-            archived: Boolean(item.archived)
-          }));
+          parsed.forEach((item, index) => {
+            workOrders.push({
+              id: Number(item.id) || Date.now() + index,
+              type: item.type === "Sewer" ? "Sewer" : "Water",
+              issue: item.issue || "",
+              location: item.location || "",
+              date: item.date || new Date().toISOString().slice(0, 10),
+              number811: item.number811 || "",
+              status: item.status || "Open",
+              notes: item.notes || "",
+              rowColor: item.rowColor || "",
+              archived: Boolean(item.archived)
+            });
+          });
+
+          selectedWorkOrderIds.clear();
           selectedId = null;
           renderTable();
-        } catch (error) {
-          alert('Could not import file. Please select a valid exported JSON file.');
+        } catch {
+          alert("Could not import file. Select a valid exported JSON file.");
         }
       };
+
       reader.readAsText(file);
     }
 
-    document.getElementById('exportBtn').addEventListener('click', exportData);
-    document.getElementById('importFile').addEventListener('change', (event) => {
-      importData(event.target.files[0]);
-      event.target.value = '';
+    function getSupervisorExportOrders() {
+      const selected = workOrders.filter(item => selectedWorkOrderIds.has(item.id));
+      return selected.length ? selected : getFilteredData();
+    }
+
+    function rowPriorityLabel(rowColor) {
+      const labels = {
+        "var(--row-red)": "Urgent",
+        "var(--row-yellow)": "Waiting",
+        "var(--row-green)": "On Track",
+        "var(--row-blue)": "Scheduled",
+        "var(--row-purple)": "Review"
+      };
+      return labels[rowColor] || "Standard";
+    }
+
+    function buildSupervisorReport(orders) {
+      const generatedAt = formatReportDate();
+      const scope = selectedWorkOrderIds.size
+        ? `Selected work orders (${orders.length})`
+        : `Current supervisor view (${orders.length})`;
+
+      const waterCount = orders.filter(order => order.type === "Water").length;
+      const sewerCount = orders.filter(order => order.type === "Sewer").length;
+      const urgentCount = orders.filter(order => order.rowColor === "var(--row-red)" || String(order.status).toLowerCase() === "open").length;
+
+      const rows = orders.map((order, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td><span class="service ${order.type === "Sewer" ? "sewer" : "water"}">${escapeHtml(order.type)}</span></td>
+          <td><strong>WO-${String(order.id).padStart(4, "0")}</strong><br><span class="sub">${escapeHtml(order.issue)}</span></td>
+          <td>${escapeHtml(order.location || "—")}</td>
+          <td>${escapeHtml(formatDate(order.date))}</td>
+          <td>${escapeHtml(order.number811 || "—")}</td>
+          <td><span class="status ${statusClass(order.status)}">${escapeHtml(order.status || "Open")}</span><br><span class="sub">${rowPriorityLabel(order.rowColor)}</span></td>
+          <td class="notes">${escapeHtml(order.notes || "No supervisor notes recorded.")}</td>
+        </tr>
+      `).join("");
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Supervisor Water & Sewer Work Order Report</title>
+<style>
+  @page { size: landscape; margin: 0.45in; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #18202a; font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; }
+  .report-header { display: grid; grid-template-columns: 1fr auto; gap: 24px; padding: 0 0 14px; border-bottom: 3px solid #1678c7; }
+  .eyebrow { margin: 0 0 4px; color: #1678c7; font-size: 8pt; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+  h1 { margin: 0; color: #142433; font-size: 22pt; line-height: 1; }
+  .subtitle { margin: 6px 0 0; color: #536271; font-size: 10pt; }
+  .generated { min-width: 205px; padding: 10px 12px; border: 1px solid #bfd4e7; background: #f4f9fd; color: #334c61; font-size: 9pt; text-align: right; }
+  .generated strong { display: block; margin-bottom: 3px; color: #173d5d; font-size: 10pt; }
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+  .metric { padding: 10px 12px; border-left: 4px solid #1678c7; background: #f1f5f8; }
+  .metric.green { border-color: #258d6b; }
+  .metric.orange { border-color: #c88b20; }
+  .metric.red { border-color: #bf3b47; }
+  .metric span { display: block; color: #687684; font-size: 7.5pt; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .metric strong { display: block; margin-top: 3px; color: #18202a; font-size: 16pt; }
+  .scope { margin: 0 0 10px; color: #536271; font-size: 9pt; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  thead { display: table-header-group; }
+  th { padding: 8px 7px; background: #1d3447; color: #fff; font-size: 7.5pt; letter-spacing: .7px; text-align: left; text-transform: uppercase; }
+  td { padding: 8px 7px; border-bottom: 1px solid #d8e1e8; vertical-align: top; word-wrap: break-word; }
+  tr:nth-child(even) td { background: #f7fafc; }
+  th:nth-child(1), td:nth-child(1) { width: 3%; text-align: center; }
+  th:nth-child(2), td:nth-child(2) { width: 8%; }
+  th:nth-child(3), td:nth-child(3) { width: 18%; }
+  th:nth-child(4), td:nth-child(4) { width: 16%; }
+  th:nth-child(5), td:nth-child(5) { width: 8%; }
+  th:nth-child(6), td:nth-child(6) { width: 10%; }
+  th:nth-child(7), td:nth-child(7) { width: 11%; }
+  th:nth-child(8), td:nth-child(8) { width: 26%; }
+  .service, .status { display: inline-block; padding: 3px 6px; border-radius: 10px; font-size: 8pt; font-weight: 700; }
+  .service.water { background: #dff2ff; color: #0c5b8d; }
+  .service.sewer { background: #def7ed; color: #126345; }
+  .status.open { background: #ffe4e7; color: #9a2530; }
+  .status.scheduled, .status.planned { background: #e5f0ff; color: #1a5b9d; }
+  .status.on-hold { background: #fff1d5; color: #8a5b09; }
+  .status.completed { background: #ddf7e9; color: #166942; }
+  .sub { color: #5d6a75; font-size: 8.5pt; line-height: 1.3; }
+  .notes { color: #34424f; line-height: 1.35; }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; color: #6a7782; font-size: 8pt; }
+  .footer .page:after { content: counter(page) " of " counter(pages); }
+</style>
+</head>
+<body>
+  <header class="report-header">
+    <div>
+      <p class="eyebrow">Public Works · Supervisor Report</p>
+      <h1>Water &amp; Sewer Work Orders</h1>
+      <p class="subtitle">Operational review packet for work assignment, field coordination, and status follow-up.</p>
+    </div>
+    <div class="generated">
+      <strong>Supervisor PDF Export</strong>
+      Generated ${escapeHtml(generatedAt)}<br>
+      ${escapeHtml(scope)}
+    </div>
+  </header>
+
+  <section class="summary">
+    <div class="metric"><span>Total Orders</span><strong>${orders.length}</strong></div>
+    <div class="metric"><span>Water</span><strong>${waterCount}</strong></div>
+    <div class="metric green"><span>Sewer</span><strong>${sewerCount}</strong></div>
+    <div class="metric ${urgentCount ? "red" : "orange"}"><span>Open / Urgent Review</span><strong>${urgentCount}</strong></div>
+  </section>
+
+  <p class="scope"><strong>Report scope:</strong> ${escapeHtml(scope)} · ${showArchive ? "Archived records view" : "Active records view"} · Search: ${escapeHtml(currentSearch || "None")}</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Service</th>
+        <th>Work Order</th>
+        <th>Location</th>
+        <th>Date</th>
+        <th>811 Number</th>
+        <th>Status / Priority</th>
+        <th>Supervisor / Crew Notes</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <footer class="footer">
+    Water &amp; Sewer Work Order Supervisor Report · Confidential operational use · Page <span class="page"></span>
+  </footer>
+</body>
+</html>`;
+    }
+
+    function openSupervisorPdfExport() {
+      const orders = getSupervisorExportOrders();
+
+      if (!orders.length) {
+        alert("There are no work orders available in the current view to export.");
+        return;
+      }
+
+      const reportWindow = window.open("", "_blank", "noopener,noreferrer");
+      if (!reportWindow) {
+        alert("Your browser blocked the report window. Please allow pop-ups for this dashboard and try again.");
+        return;
+      }
+
+      reportWindow.document.open();
+      reportWindow.document.write(buildSupervisorReport(orders));
+      reportWindow.document.close();
+
+      reportWindow.onload = () => {
+        reportWindow.focus();
+        reportWindow.print();
+      };
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        chips.forEach(item => item.classList.remove("active"));
+        chip.classList.add("active");
+        currentFilter = chip.dataset.filterType;
+        renderTable();
+      });
     });
 
-    document.getElementById('newOrderBtn').addEventListener('click', () => {
-      const nextId = Math.max(...workOrders.map(item => item.id)) + 1;
+    searchInput.addEventListener("input", () => {
+      currentSearch = searchInput.value.toLowerCase().trim();
+      renderTable();
+    });
+
+    document.getElementById("archiveToggleBtn").addEventListener("click", () => {
+      showArchive = !showArchive;
+      const button = document.getElementById("archiveToggleBtn");
+      button.classList.toggle("active", showArchive);
+      button.textContent = showArchive ? "Show Active" : "Show Archive";
+      button.setAttribute("aria-pressed", String(showArchive));
+      selectedId = null;
+      renderTable();
+    });
+
+    document.getElementById("selectVisibleBtn").addEventListener("click", () => {
+      getFilteredData().forEach(item => selectedWorkOrderIds.add(item.id));
+      renderTable();
+    });
+
+    document.getElementById("clearSelectionBtn").addEventListener("click", () => {
+      selectedWorkOrderIds.clear();
+      renderTable();
+    });
+
+    selectAllVisible.addEventListener("change", () => {
+      const visible = getFilteredData();
+      visible.forEach(item => {
+        if (selectAllVisible.checked) selectedWorkOrderIds.add(item.id);
+        else selectedWorkOrderIds.delete(item.id);
+      });
+      renderTable();
+    });
+
+    document.getElementById("supervisorExportBtn").addEventListener("click", openSupervisorPdfExport);
+    document.getElementById("exportBtn").addEventListener("click", exportData);
+
+    document.getElementById("importFile").addEventListener("change", event => {
+      importData(event.target.files[0]);
+      event.target.value = "";
+    });
+
+    document.getElementById("newOrderBtn").addEventListener("click", () => {
+      const nextId = workOrders.length ? Math.max(...workOrders.map(item => Number(item.id) || 0)) + 1 : 1;
       workOrders.unshift({
         id: nextId,
-        type: 'Water',
-        issue: 'New work order',
-        location: 'Enter location',
+        type: "Water",
+        issue: "New work order",
+        location: "",
         date: new Date().toISOString().slice(0, 10),
-        number811: '',
-        status: 'Open',
-        assignedTo: '',
-        notes: '',
-        rowColor: '',
+        number811: "",
+        status: "Open",
+        notes: "",
+        rowColor: "",
         archived: false
       });
       selectedId = nextId;
@@ -766,49 +1207,33 @@
       openDrawer(nextId);
     });
 
-    document.getElementById('archiveToggleBtn').addEventListener('click', () => {
-      showArchive = !showArchive;
-      const btn = document.getElementById('archiveToggleBtn');
-      btn.classList.toggle('active', showArchive);
-      btn.textContent = showArchive ? 'Show Active' : 'Show Archive';
-      btn.setAttribute('aria-pressed', String(showArchive));
-      selectedId = null;
-      renderTable();
-    });
+    document.getElementById("saveBtn").addEventListener("click", saveCurrentEdit);
+    document.getElementById("cancelBtn").addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
 
-    document.getElementById('clearColorsBtn').addEventListener('click', () => {
-      if (!selectedId) return;
-      const item = workOrders.find(entry => entry.id === selectedId);
-      if (!item) return;
-      item.rowColor = '';
-      renderTable();
-    });
-
-    document.getElementById('saveBtn').addEventListener('click', saveCurrentEdit);
-    document.getElementById('cancelBtn').addEventListener('click', closeDrawer);
-    overlay.addEventListener('click', closeDrawer);
-
-    contextMenu.querySelectorAll('[data-color]').forEach(button => {
-      button.addEventListener('click', () => {
-        if (contextRowId == null) return;
+    contextMenu.querySelectorAll("[data-color]").forEach(button => {
+      button.addEventListener("click", () => {
         const item = workOrders.find(entry => entry.id === contextRowId);
+        if (!item) return;
         item.rowColor = button.dataset.color;
         closeContextMenu();
         renderTable();
       });
     });
 
-    document.addEventListener('click', (event) => {
+    document.addEventListener("click", event => {
       if (!contextMenu.contains(event.target)) closeContextMenu();
     });
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
         closeContextMenu();
         closeDrawer();
       }
     });
 
+    setInterval(refreshClock, 30000);
+    refreshClock();
     renderTable();
   </script>
 </body>
