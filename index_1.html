@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Work Order Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Sized for a big TV — everything scales with viewport width */
+    --text-xs:  clamp(0.8rem,  0.65rem + 0.40vw, 1.05rem);
+    --text-sm:  clamp(0.9rem,  0.75rem + 0.45vw, 1.2rem);
+    --text-base:clamp(1.05rem, 0.85rem + 0.55vw, 1.45rem);
+    --text-lg:  clamp(1.3rem,  1.0rem  + 0.9vw,  2.1rem);
+    --text-xl:  clamp(1.9rem,  1.3rem  + 1.8vw,  3.4rem);
+
+    --bg-0: #04060c;
+    --bg-1: #0a1020;
+    --panel:      rgba(13, 20, 36, 0.72);
+    --panel-soft: rgba(20, 30, 52, 0.55);
+    --border:  rgba(120, 170, 255, 0.16);
+    --border-strong: rgba(120, 190, 255, 0.35);
+    --divider: rgba(140, 180, 255, 0.10);
+
+    --text:       #eef3fb;
+    --text-muted: #a8b6cf;
+    --text-faint: #77869f;
+
+    --volt:   #ffd94d;   /* lightning yellow  */
+    --spark:  #55e0ff;   /* electric cyan     */
+    --accent: #4d9dff;   /* action blue       */
+    --focus:  #8ad2ff;
+
+    --row-red:    #7e1d2b;
+    --row-yellow: #6b5a1a;
+    --row-green:  #1c5238;
+    --row-blue:   #1f4066;
+    --row-purple: #46306b;
+
+    --t-water:    #38bdf8;
+    --t-sewer:    #34d399;
+    --t-streets:  #f59e0b;
+    --t-wwtp:     #2dd4bf;
+    --t-police:   #818cf8;
+    --t-fire:     #f87171;
+    --t-buildings:#e879f9;
+    --t-other:    #94a3b8;
+
+    --radius: 22px;
+    --radius-sm: 12px;
+    --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Sora', 'Inter', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--text);
+    background:
+      radial-gradient(1200px 800px at 85% -10%, rgba(77, 157, 255, 0.10), transparent 60%),
+      radial-gradient(1000px 700px at -10% 110%, rgba(85, 224, 255, 0.07), transparent 55%),
+      linear-gradient(155deg, var(--bg-1) 0%, var(--bg-0) 55%, #030509 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Organic background shapes ---------- */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.55;
+  }
+  .blob-1 { width: 46vw; height: 46vw; top: -18vw; left: -14vw;
+            background: radial-gradient(circle at 60% 60%, rgba(255,217,77,0.16), rgba(85,224,255,0.10) 55%, transparent 75%); }
+  .blob-2 { width: 38vw; height: 38vw; bottom: -16vw; right: -10vw;
+            background: radial-gradient(circle at 40% 40%, rgba(77,157,255,0.18), rgba(129,140,248,0.08) 60%, transparent 78%); }
+  .blob-3 { width: 24vw; height: 24vw; top: 34vh; right: 22vw;
+            background: radial-gradient(circle, rgba(85,224,255,0.08), transparent 70%); }
+
+  /* ---------- Lightning bolt from the upper left ---------- */
+  .bolt {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(44vw, 780px);
+    height: auto;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.9;
+    animation: bolt-flicker 7s ease-in-out infinite;
+  }
+  @keyframes bolt-flicker {
+    0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 18px rgba(255,217,77,0.35)); }
+    46%      { opacity: 0.95; filter: drop-shadow(0 0 30px rgba(255,217,77,0.55)); }
+    48%      { opacity: 0.65; filter: drop-shadow(0 0 12px rgba(255,217,77,0.25)); }
+    50%      { opacity: 1;    filter: drop-shadow(0 0 40px rgba(85,224,255,0.6)); }
+    54%      { opacity: 0.88; filter: drop-shadow(0 0 22px rgba(255,217,77,0.4)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bolt { animation: none; }
+  }
+
+  /* ---------- Layout ---------- */
+  .app {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    gap: clamp(0.8rem, 1.2vw, 1.4rem);
+    padding: clamp(1rem, 1.8vw, 2rem);
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(14px);
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: clamp(1rem, 1.6vw, 1.6rem) clamp(1.2rem, 2vw, 2rem);
+    border-radius: var(--radius) var(--radius) 60px var(--radius);
+    flex-wrap: wrap;
+  }
+
+  .brand { display: flex; align-items: center; gap: 1rem; }
+
+  .brand-bolt {
+    width: clamp(2.6rem, 3.4vw, 4rem);
+    height: clamp(2.6rem, 3.4vw, 4rem);
+    flex: 0 0 auto;
+    filter: drop-shadow(0 0 12px rgba(255,217,77,0.55));
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    background: linear-gradient(92deg, #ffffff 0%, var(--spark) 55%, var(--volt) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .brand p {
+    margin: 0.25rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .clock { text-align: right; }
+  .clock-time {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+    text-shadow: 0 0 24px rgba(85,224,255,0.35);
+  }
+  .clock-date {
+    margin-top: 0.3rem;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- Stats ---------- */
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(0.6rem, 1vw, 1.1rem);
+  }
+
+  .stat {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(0.9rem, 1.3vw, 1.4rem) clamp(1rem, 1.4vw, 1.5rem);
+    background: var(--panel-soft);
+    border: 1px solid var(--border);
+    border-radius: 18px 18px 18px 38px;
+    backdrop-filter: blur(12px);
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, var(--stat-color, var(--spark)), transparent 80%);
+  }
+  .stat-label {
+    display: block;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-faint);
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .stat-value.small { font-size: var(--text-base); font-family: var(--font-body); font-weight: 600; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(0.8rem, 1.2vw, 1.2rem) clamp(1rem, 1.6vw, 1.6rem);
+    border-radius: 44px;
+  }
+  .toolbar-group { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
+
+  .button, .search, select, input, textarea {
+    border: 1px solid var(--border);
+    background: rgba(10, 16, 30, 0.8);
+    color: var(--text);
+    border-radius: 999px;
+    min-height: clamp(2.75rem, 3.2vw, 3.4rem);
+    padding: 0 clamp(1rem, 1.4vw, 1.4rem);
+    font: inherit;
+    font-size: var(--text-sm);
+  }
+
+  .button {
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    white-space: nowrap;
+  }
+  .button:hover { transform: translateY(-1px); }
+  .button:active { transform: translateY(0); }
+
+  .button.primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #2b6fd8 100%);
+    border-color: var(--border-strong);
+    box-shadow: 0 0 20px rgba(77,157,255,0.35);
+  }
+  .button.primary:hover { box-shadow: 0 0 30px rgba(77,157,255,0.55); }
+
+  .button.volt {
+    background: linear-gradient(135deg, var(--volt) 0%, #f0a818 100%);
+    color: #201802;
+    border-color: rgba(255,225,120,0.6);
+    box-shadow: 0 0 20px rgba(255,217,77,0.3);
+  }
+  .button.volt:hover { box-shadow: 0 0 32px rgba(255,217,77,0.5); }
+
+  .button.ghost { background: rgba(255,255,255,0.03); }
+  .button.ghost:hover { background: rgba(255,255,255,0.08); }
+
+  .button.active {
+    background: rgba(85,224,255,0.16);
+    border-color: rgba(85,224,255,0.5);
+    color: #d8f6ff;
+  }
+
+  .search { min-width: clamp(240px, 24vw, 420px); border-radius: 999px; }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path fill='%23a8b6cf' d='M1 1l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 1.1rem center;
+    padding-right: 2.8rem;
+  }
+
+  input:focus, textarea:focus, select:focus, .button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  #saveStatus {
+    font-size: var(--text-xs);
+    color: var(--text-faint);
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: 200ms ease;
+    white-space: nowrap;
+  }
+  #saveStatus.ok    { color: #7ef0b2; border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.08); }
+  #saveStatus.error { color: #ff9d9d; border-color: rgba(248,113,113,0.4);  background: rgba(248,113,113,0.08); }
+  #saveStatus.dirty { color: var(--volt); border-color: rgba(255,217,77,0.4); background: rgba(255,217,77,0.07); }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow: hidden; display: grid; min-height: 0; border-radius: var(--radius) 60px var(--radius) var(--radius); }
+  .table-scroller { overflow: auto; }
+
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(8, 13, 26, 0.97);
+    color: var(--spark);
+    text-align: left;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: clamp(0.8rem, 1.2vw, 1.2rem);
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  tbody td {
+    padding: clamp(0.75rem, 1.1vw, 1.15rem);
+    border-bottom: 1px solid var(--divider);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-base);
+  }
+
+  tbody tr { background: rgba(255,255,255,0.015); transition: background-color 150ms ease; cursor: default; }
+  tbody tr:hover { background: rgba(85,224,255,0.06); }
+  tbody tr.selected { outline: 2px solid rgba(85,224,255,0.6); outline-offset: -2px; }
+
+  .empty-row td {
+    text-align: center;
+    color: var(--text-faint);
+    padding: 3rem 1rem;
+    white-space: normal;
+  }
+
+  .type-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    background: color-mix(in srgb, var(--pill, var(--t-other)) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--pill, var(--t-other)) 45%, transparent);
+    color: color-mix(in srgb, var(--pill, var(--t-other)) 80%, #ffffff);
+    white-space: nowrap;
+  }
+  .type-pill::before {
+    content: '';
+    width: 0.55em; height: 0.55em;
+    border-radius: 999px;
+    background: var(--pill, var(--t-other));
+    box-shadow: 0 0 8px var(--pill, var(--t-other));
+  }
+
+  .muted { color: var(--text-muted); }
+
+  .actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+  .icon-btn {
+    min-height: 2.6rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    transition: 140ms ease;
+    white-space: nowrap;
+  }
+  .icon-btn:hover { background: rgba(85,224,255,0.14); border-color: rgba(85,224,255,0.45); }
+  .icon-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* ---------- Drawer ---------- */
+  .drawer {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(480px, 100%);
+    height: 100vh;
+    background: rgba(10, 16, 30, 0.98);
+    border-left: 1px solid var(--border-strong);
+    box-shadow: -30px 0 60px rgba(0,0,0,0.5);
+    transform: translateX(105%);
+    transition: transform 240ms ease;
+    z-index: 20;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-header { padding: 1.4rem 1.6rem; border-bottom: 1px solid var(--divider); }
+  .drawer-header h2 {
+    margin: 0 0 0.3rem;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+  }
+  .drawer-footer {
+    padding: 1.2rem 1.6rem;
+    border-top: 1px solid var(--divider);
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+  }
+  .drawer-body {
+    overflow: auto;
+    padding: 1.4rem 1.6rem;
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
+
+  .drawer .button, .drawer select, .drawer input, .drawer textarea { border-radius: var(--radius-sm); }
+  .field { display: grid; gap: 0.4rem; }
+  label { font-size: var(--text-sm); color: var(--text-muted); font-weight: 600; }
+  textarea { min-height: 120px; padding: 0.8rem 1.1rem; resize: vertical; border-radius: var(--radius-sm); }
+
+  .hint { color: var(--text-faint); font-size: var(--text-sm); margin: 0; }
+
+  /* ---------- Context menu ---------- */
+  .context-menu {
+    position: fixed;
+    min-width: 230px;
+    background: rgba(12, 18, 33, 0.98);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+    padding: 0.4rem;
+    z-index: 30;
+    display: none;
+  }
+  .context-menu.open { display: block; }
+  .menu-title {
+    padding: 0.5rem 0.8rem;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+  .menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-size: var(--text-sm);
+  }
+  .menu-item:hover, .menu-item:focus-visible { background: rgba(85,224,255,0.1); outline: none; }
+  .swatch {
+    width: 18px; height: 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.3);
+    flex: 0 0 auto;
+  }
+
+
+  /* ---------- Supervisor PDF report dialog ---------- */
+  .report-modal {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: min(560px, calc(100% - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    transform: translate(-50%, -46%) scale(0.98);
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(10, 16, 30, 0.98);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 40px 90px rgba(0,0,0,0.6);
+    transition: opacity 180ms ease, transform 180ms ease;
+    z-index: 25;
+  }
+  .report-modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .report-modal header { padding: 1.4rem 1.6rem 1rem; border-bottom: 1px solid var(--divider); }
+  .report-modal h2 { margin: 0 0 0.3rem; font-family: var(--font-display); font-size: var(--text-lg); }
+  .report-body { padding: 1.2rem 1.6rem; display: grid; gap: 1.1rem; }
+  .report-body fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  .report-body legend { color: var(--text-muted); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .report-option {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    font-size: var(--text-sm);
+  }
+  .report-option:hover { background: rgba(255,255,255,0.07); }
+  .report-row { cursor: default; }
+  .report-row .button { margin-left: auto; padding: 0.55rem 1rem; font-size: var(--text-sm); border-radius: var(--radius-sm); white-space: nowrap; }
+  .report-option input { width: 1.15em; height: 1.15em; margin: 0; accent-color: var(--accent); padding: 0; }
+  .report-option .dot { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: var(--dot); flex: none; }
+  .report-option .count { margin-left: auto; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .report-option small { display: block; color: var(--text-faint); font-size: var(--text-xs); }
+  .report-scope { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .report-scope .report-option { justify-content: center; }
+  .report-modal footer { padding: 1rem 1.6rem 1.3rem; border-top: 1px solid var(--divider); display: flex; gap: 0.8rem; justify-content: flex-end; align-items: center; }
+  .report-modal footer .hint { margin-right: auto; }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(2, 4, 10, 0.5);
+    backdrop-filter: blur(2px);
+    display: none;
+    z-index: 10;
+  }
+  .overlay.open { display: block; }
+
+  @media (max-width: 1100px) {
+    .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .search { min-width: 100%; }
+    table { min-width: 1024px; }
+    .clock { display: none; }
+    .bolt { width: 70vw; opacity: 0.55; }
+  }
+</style>
+</head>
+<body>
+  <!-- Organic glow blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Lightning bolt shooting down from the upper left -->
+  <svg class="bolt" viewBox="0 0 600 760" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="boltFill" x1="60" y1="0" x2="420" y2="760" gradientUnits="userSpaceOnUse">
+        <stop offset="0"   stop-color="#fff3b0"/>
+        <stop offset="0.35" stop-color="#ffd94d"/>
+        <stop offset="0.75" stop-color="#55e0ff"/>
+        <stop offset="1"   stop-color="#4d9dff" stop-opacity="0.85"/>
+      </linearGradient>
+      <linearGradient id="boltGlow" x1="60" y1="0" x2="420" y2="760" gradientUnits="userSpaceOnUse">
+        <stop offset="0"  stop-color="#ffd94d" stop-opacity="0.35"/>
+        <stop offset="1"  stop-color="#55e0ff" stop-opacity="0.12"/>
+      </linearGradient>
+      <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="26"/>
+      </filter>
+    </defs>
+    <!-- wide soft glow behind the bolt -->
+    <path filter="url(#soft)" fill="url(#boltGlow)"
+      d="M96 -60 L268 236 L188 252 L356 470 L292 486 L470 760 L206 462 L286 440 L120 226 L204 204 Z"/>
+    <!-- the bolt itself -->
+    <path fill="url(#boltFill)" opacity="0.92"
+      d="M110 -60 L254 226 L182 242 L334 452 L274 468 L436 730 L198 452 L272 432 L118 220 L196 200 Z"/>
+    <!-- hot white core streak -->
+    <path fill="#ffffff" opacity="0.5"
+      d="M150 -60 L246 158 L212 166 L318 330 L292 338 L398 520 L268 348 L300 340 L182 168 L214 160 Z"/>
+  </svg>
+
+  <a href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to content</a>
+
+  <div class="app">
+    <header class="panel header">
+      <div class="brand">
+        <svg class="brand-bolt" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M13 2 L4.5 13.5 H10 L8.5 22 L19.5 9.5 H13.5 Z" fill="url(#miniBolt)"/>
+          <defs>
+            <linearGradient id="miniBolt" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#ffd94d"/><stop offset="1" stop-color="#55e0ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1>Work Orders</h1>
+          <p>Public Works &middot; Live Board</p>
+        </div>
+      </div>
+      <div class="clock" aria-hidden="true">
+        <div class="clock-time" id="clockTime">--:--</div>
+        <div class="clock-date" id="clockDate">&nbsp;</div>
+      </div>
+    </header>
+
+    <div class="meta" aria-label="Dashboard summary">
+      <div class="stat" style="--stat-color: var(--volt);"><span class="stat-label">Open Jobs</span><span class="stat-value" id="stat-open">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-water);"><span class="stat-label">Water</span><span class="stat-value" id="stat-water">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-sewer);"><span class="stat-label">Sewer</span><span class="stat-value" id="stat-sewer">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-streets);"><span class="stat-label">Streets</span><span class="stat-value" id="stat-streets">0</span></div>
+      <div class="stat" style="--stat-color: var(--t-other);"><span class="stat-label">Archived</span><span class="stat-value" id="stat-archived">0</span></div>
+      <div class="stat" style="--stat-color: var(--spark);"><span class="stat-label">Board Updated</span><span class="stat-value small" id="stat-updated">--</span></div>
+    </div>
+
+    <section class="panel toolbar" aria-label="Filters and actions">
+      <div class="toolbar-group">
+        <select id="typeFilter" aria-label="Filter by type">
+          <option value="all">All Types</option>
+          <option>Water</option>
+          <option>Sewer</option>
+          <option>Streets</option>
+          <option>WWTP</option>
+          <option>Police Department</option>
+          <option>Fire Department</option>
+          <option>Buildings</option>
+          <option>Other</option>
+        </select>
+        <input id="searchInput" class="search" type="search" spellcheck="true" placeholder="Search issue, location, status, or 811 number" aria-label="Search work orders" />
+        <button class="button ghost" id="archiveToggleBtn" aria-pressed="false">Show Archive</button>
+      </div>
+      <div class="toolbar-group">
+        <span id="saveStatus" role="status">Ready</span>
+        <button class="button ghost" id="clearColorsBtn">Clear Row Color</button>
+        <button class="button ghost" id="exportBtn">Export</button>
+        <button class="button primary" id="supervisorPdfBtn" title="Download a supervisor PDF report grouped by division">&#128196; Supervisor PDF</button>
+        <label class="button ghost" for="importFile" style="display:inline-flex;align-items:center;cursor:pointer;">Import</label>
+        <input id="importFile" type="file" accept="application/json" hidden />
+        <button class="button primary" id="saveDatabaseBtn">Save to Database</button>
+        <button class="button volt" id="newOrderBtn">&#9889; New Work Order</button>
+      </div>
+    </section>
+
+    <main id="main" class="panel table-wrap">
+      <div class="table-scroller">
+        <table aria-label="Work orders table">
+          <thead>
+            <tr>
+              <th style="width: 13rem;">Type</th>
+              <th style="width: 20rem;">Issue</th>
+              <th style="width: 16rem;">Location</th>
+              <th style="width: 9rem;">Date</th>
+              <th style="width: 11rem;">811 Number</th>
+              <th>Status</th>
+              <th style="width: 15rem;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="drawerTitle">
+    <div class="drawer-header">
+      <h2 id="drawerTitle">Edit Work Order</h2>
+      <p class="hint">Update details here. Right-click a row in the table to set its color.</p>
+    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label for="fieldType">Type of Issue</label>
+        <select id="fieldType">
+          <option>Water</option>
+          <option>Sewer</option>
+          <option>Streets</option>
+          <option>WWTP</option>
+          <option>Police Department</option>
+          <option>Fire Department</option>
+          <option>Buildings</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fieldIssue">Issue</label>
+        <input id="fieldIssue" type="text" spellcheck="true" />
+      </div>
+      <div class="field">
+        <label for="fieldLocation">Location</label>
+        <input id="fieldLocation" type="text" spellcheck="true" />
+      </div>
+      <div class="field">
+        <label for="fieldDate">Date</label>
+        <input id="fieldDate" type="date" />
+      </div>
+      <div class="field">
+        <label for="field811">811 Number</label>
+        <input id="field811" type="text" />
+      </div>
+      <div class="field">
+        <label for="fieldStatus">Status</label>
+        <input id="fieldStatus" type="text" spellcheck="true" />
+      </div>
+      <div class="field">
+        <label for="fieldNotes">Notes</label>
+        <textarea id="fieldNotes" spellcheck="true"></textarea>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="button ghost" id="cancelBtn">Cancel</button>
+      <button class="button primary" id="saveBtn">Save Changes</button>
+    </div>
+  </aside>
+
+
+  <section class="report-modal" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportTitle" aria-hidden="true">
+    <header>
+      <h2 id="reportTitle">Supervisor PDF Report</h2>
+      <p class="hint">Each division gets its own PDF, with several work orders to a page.</p>
+    </header>
+    <div class="report-body">
+      <fieldset>
+        <legend>Include</legend>
+        <div class="report-scope">
+          <label class="report-option"><input type="radio" name="reportScope" value="active" checked>Active</label>
+          <label class="report-option"><input type="radio" name="reportScope" value="archived">Completed</label>
+          <label class="report-option"><input type="radio" name="reportScope" value="all">All</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Download</legend>
+        <div class="report-option report-row"><span class="dot" style="--dot: linear-gradient(135deg, var(--t-water) 50%, var(--t-sewer) 50%);"></span><span>Water &amp; Sewer<small><span data-count="watersewer">0 work orders</span></small></span><button class="button primary" data-report="watersewer">Download PDF</button></div>
+        <div class="report-option report-row"><span class="dot" style="--dot: var(--t-streets);"></span><span>Streets<small><span data-count="streets">0 work orders</span></small></span><button class="button primary" data-report="streets">Download PDF</button></div>
+        <div class="report-option report-row"><span class="dot" style="--dot: var(--t-police);"></span><span>Admin<small><span data-count="admin">0 work orders</span> &middot; WWTP, Police, Fire, Buildings &amp; Other</small></span><button class="button primary" data-report="admin">Download PDF</button></div>
+      </fieldset>
+    </div>
+    <footer>
+      <span class="hint" id="reportHint"></span>
+      <button class="button ghost" id="reportCancelBtn">Close</button>
+    </footer>
+  </section>
+
+  <div class="context-menu" id="contextMenu" role="menu" aria-label="Row color menu">
+    <div class="menu-title">Row color</div>
+    <button class="menu-item" data-color=""><span class="swatch" style="background: #2b3242;"></span>Default</button>
+    <button class="menu-item" data-color="var(--row-red)"><span class="swatch" style="background: var(--row-red);"></span>Red — urgent</button>
+    <button class="menu-item" data-color="var(--row-yellow)"><span class="swatch" style="background: var(--row-yellow);"></span>Yellow — waiting</button>
+    <button class="menu-item" data-color="var(--row-green)"><span class="swatch" style="background: var(--row-green);"></span>Green — on track</button>
+    <button class="menu-item" data-color="var(--row-blue)"><span class="swatch" style="background: var(--row-blue);"></span>Blue — scheduled</button>
+    <button class="menu-item" data-color="var(--row-purple)"><span class="swatch" style="background: var(--row-purple);"></span>Purple — review</button>
+  </div>
+
+  <script>
+    'use strict';
+
+    const API_URL = 'http://127.0.0.1:5000/api/work-orders';
+
+    const TYPE_COLORS = {
+      'Water': 'var(--t-water)',
+      'Sewer': 'var(--t-sewer)',
+      'Streets': 'var(--t-streets)',
+      'WWTP': 'var(--t-wwtp)',
+      'Police Department': 'var(--t-police)',
+      'Fire Department': 'var(--t-fire)',
+      'Buildings': 'var(--t-buildings)',
+      'Other': 'var(--t-other)'
+    };
+
+    let workOrders = [];
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let selectedId = null;
+    let editingId = null;
+    let contextRowId = null;
+    let showArchive = false;
+    let isDirty = false;
+
+    /* Auto-refresh: reload from the database every 2 minutes,
+       but never while there are unsaved edits or the edit drawer is open. */
+    const AUTO_REFRESH_MS = 2 * 60 * 1000;
+
+    const tableBody = document.getElementById('tableBody');
+    const typeFilter = document.getElementById('typeFilter');
+    const searchInput = document.getElementById('searchInput');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('overlay');
+    const contextMenu = document.getElementById('contextMenu');
+    const saveDatabaseBtn = document.getElementById('saveDatabaseBtn');
+    const saveStatus = document.getElementById('saveStatus');
+
+    const fields = {
+      type: document.getElementById('fieldType'),
+      issue: document.getElementById('fieldIssue'),
+      location: document.getElementById('fieldLocation'),
+      date: document.getElementById('fieldDate'),
+      number811: document.getElementById('field811'),
+      status: document.getElementById('fieldStatus'),
+      notes: document.getElementById('fieldNotes')
+    };
+
+    /* ---------- Helpers ---------- */
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const parts = iso.split('-');
+      if (parts.length !== 3) return iso;
+      return `${parts[1]}/${parts[2]}/${parts[0].slice(2)}`;
+    }
+
+    function setStatus(message, kind) {
+      saveStatus.textContent = message;
+      saveStatus.className = kind || '';
+    }
+
+    function markDirty() {
+      isDirty = true;
+      setStatus('Unsaved changes', 'dirty');
+    }
+
+    /* ---------- Live clock ---------- */
+
+    function tickClock() {
+      const now = new Date();
+      document.getElementById('clockTime').textContent =
+        now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('clockDate').textContent =
+        now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    tickClock();
+    setInterval(tickClock, 15000);
+
+    /* ---------- Rendering ---------- */
+
+    function refreshStats(visible) {
+      const active = workOrders.filter(item => !item.archived);
+      document.getElementById('stat-open').textContent = active.length;
+      document.getElementById('stat-water').textContent = active.filter(i => i.type === 'Water').length;
+      document.getElementById('stat-sewer').textContent = active.filter(i => i.type === 'Sewer').length;
+      document.getElementById('stat-streets').textContent = active.filter(i => i.type === 'Streets').length;
+      document.getElementById('stat-archived').textContent = workOrders.filter(i => i.archived).length;
+      const now = new Date();
+      document.getElementById('stat-updated').textContent =
+        now.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+        now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function getFilteredData() {
+      return workOrders.filter(item => {
+        const typePass = currentFilter === 'all' || item.type === currentFilter;
+        const archivePass = showArchive ? item.archived : !item.archived;
+        const blob = `${item.type} ${item.issue} ${item.location} ${item.number811} ${item.status} ${item.notes}`.toLowerCase();
+        const searchPass = !currentSearch || blob.includes(currentSearch);
+        return typePass && archivePass && searchPass;
+      });
+    }
+
+    function renderTable() {
+      const filtered = getFilteredData();
+      refreshStats(filtered);
+      tableBody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'empty-row';
+        tr.innerHTML = `<td colspan="7">${showArchive ? 'No archived work orders match.' : 'No work orders match. Hit ⚡ New Work Order to add one.'}</td>`;
+        tableBody.appendChild(tr);
+        return;
+      }
+
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = item.id;
+        if (item.rowColor) tr.style.background = `color-mix(in srgb, ${item.rowColor} 78%, #0a1020)`;
+        if (selectedId === item.id) tr.classList.add('selected');
+
+        const pillColor = TYPE_COLORS[item.type] || 'var(--t-other)';
+        tr.innerHTML = `
+          <td><span class="type-pill" style="--pill: ${pillColor};">${escapeHtml(item.type)}</span></td>
+          <td title="${escapeHtml(item.issue)}">${escapeHtml(item.issue)}</td>
+          <td title="${escapeHtml(item.location)}">${escapeHtml(item.location)}</td>
+          <td class="muted">${escapeHtml(formatDate(item.date))}</td>
+          <td class="muted">${escapeHtml(item.number811)}</td>
+          <td title="${escapeHtml(item.status)}">${escapeHtml(item.status)}</td>
+          <td>
+            <div class="actions">
+              <button class="icon-btn" aria-label="Edit work order" data-edit="${item.id}">Edit</button>
+              <button class="icon-btn" aria-label="${item.archived ? 'Restore work order' : 'Complete work order'}" data-complete="${item.id}">${item.archived ? 'Restore' : 'Complete'}</button>
+            </div>
+          </td>
+        `;
+
+        tr.addEventListener('click', () => {
+          selectedId = item.id;
+          renderTable();
+        });
+
+        tr.addEventListener('contextmenu', (event) => {
+          event.preventDefault();
+          selectedId = item.id;
+          contextRowId = item.id;
+          renderTable();
+          openContextMenu(event.clientX, event.clientY);
+        });
+
+        tableBody.appendChild(tr);
+      });
+
+      tableBody.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openDrawer(Number(btn.dataset.edit));
+        });
+      });
+
+      tableBody.querySelectorAll('[data-complete]').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const item = workOrders.find(entry => entry.id === Number(btn.dataset.complete));
+          if (!item) return;
+          item.archived = !item.archived;
+          item.status = item.archived ? 'Completed' : 'Open';
+          if (selectedId === item.id && !showArchive && item.archived) selectedId = null;
+          markDirty();
+          renderTable();
+        });
+      });
+    }
+
+    /* ---------- Drawer ---------- */
+
+    function openDrawer(id) {
+      editingId = id;
+      const item = workOrders.find(entry => entry.id === id);
+      if (!item) return;
+      fields.type.value = TYPE_COLORS[item.type] ? item.type : 'Other';
+      fields.issue.value = item.issue;
+      fields.location.value = item.location;
+      fields.date.value = item.date;
+      fields.number811.value = item.number811;
+      fields.status.value = item.status;
+      fields.notes.value = item.notes;
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      overlay.classList.add('open');
+      fields.issue.focus();
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+      overlay.classList.remove('open');
+      editingId = null;
+    }
+
+    function saveCurrentEdit() {
+      if (editingId == null) return;
+      const item = workOrders.find(entry => entry.id === editingId);
+      if (!item) return;
+      item.type = fields.type.value;
+      item.issue = fields.issue.value.trim();
+      item.location = fields.location.value.trim();
+      item.date = fields.date.value;
+      item.number811 = fields.number811.value.trim();
+      item.status = fields.status.value.trim();
+      item.notes = fields.notes.value.trim();
+      closeDrawer();
+      markDirty();
+      renderTable();
+    }
+
+    /* ---------- Context menu ---------- */
+
+    function openContextMenu(x, y) {
+      contextMenu.classList.add('open');
+      const maxX = window.innerWidth - contextMenu.offsetWidth - 12;
+      const maxY = window.innerHeight - contextMenu.offsetHeight - 12;
+      contextMenu.style.left = `${Math.max(12, Math.min(x, maxX))}px`;
+      contextMenu.style.top = `${Math.max(12, Math.min(y, maxY))}px`;
+    }
+
+    function closeContextMenu() {
+      contextMenu.classList.remove('open');
+    }
+
+    /* ---------- Database (Flask API) ---------- */
+
+    async function loadFromApi() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('API responded with ' + response.status);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('API did not return an array');
+
+        workOrders = data.map(order => ({
+          id: Number(order.id),
+          type: order.type || 'Other',
+          issue: order.issue || '',
+          location: order.location || '',
+          date: order.date || '',
+          number811: order.number811 || '',
+          status: order.status || '',
+          notes: order.notes || '',
+          rowColor: order.row_color || '',
+          archived: Boolean(order.archived)
+        }));
+
+        selectedId = null;
+        isDirty = false;
+        renderTable();
+        setStatus(`Loaded ${workOrders.length} record${workOrders.length === 1 ? '' : 's'} from database`, 'ok');
+      } catch (error) {
+        renderTable();
+        setStatus('Database offline — is app.py running?', 'error');
+        console.error('Load from local DB failed:', error);
+      }
+    }
+
+    /* Auto-refresh loop: keeps the TV current without touching unsaved work */
+    setInterval(() => {
+      const drawerOpen = drawer.classList.contains('open');
+      if (isDirty || drawerOpen) return;   // never overwrite in-progress edits
+      loadFromApi();
+    }, AUTO_REFRESH_MS);
+
+    async function saveToApi() {
+      const now = new Date().toISOString();
+      const payload = workOrders.map(order => ({
+        id: order.id,
+        type: order.type,
+        issue: order.issue,
+        location: order.location,
+        date: order.date || null,
+        number811: order.number811 || '',
+        status: order.status || '',
+        notes: order.notes || '',
+        row_color: order.rowColor || null,
+        archived: Boolean(order.archived),
+        updated_at: now
+      }));
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Save failed');
+      }
+
+      const result = await response.json();
+      isDirty = false;
+      setStatus(`Saved ${result.count} record${result.count === 1 ? '' : 's'} to database`, 'ok');
+    }
+
+    /* ---------- Import / Export ---------- */
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(workOrders, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'work-orders-data.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importData(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!Array.isArray(parsed)) throw new Error('Invalid file format');
+          workOrders = parsed.map(item => ({
+            id: Number(item.id) || Date.now() + Math.floor(Math.random() * 1000),
+            type: item.type || 'Other',
+            issue: item.issue || '',
+            location: item.location || '',
+            date: item.date || new Date().toISOString().slice(0, 10),
+            number811: item.number811 || '',
+            status: item.status || 'Open',
+            notes: item.notes || '',
+            rowColor: item.rowColor || '',
+            archived: Boolean(item.archived)
+          }));
+          selectedId = null;
+          markDirty();
+          renderTable();
+        } catch (error) {
+          alert('Could not import file. Please select a valid exported JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+
+    /* ---------- Supervisor PDF report ---------- */
+
+    const REPORT_GROUPS = [
+      { key: 'watersewer', title: 'Water & Sewer', subtitle: 'Water distribution and sewer collection',
+        match: t => t === 'Water' || t === 'Sewer', color: [14, 165, 233], color2: [16, 185, 129] },
+      { key: 'streets', title: 'Streets', subtitle: 'Streets, right-of-way and drainage',
+        match: t => t === 'Streets', color: [217, 119, 6] },
+      { key: 'admin', title: 'Admin', subtitle: 'WWTP, Police, Fire, Buildings and all other requests',
+        match: t => t !== 'Water' && t !== 'Sewer' && t !== 'Streets', color: [99, 102, 241] }
+    ];
+
+    const TYPE_RGB = {
+      'Water': [14, 165, 233], 'Sewer': [16, 185, 129], 'Streets': [217, 119, 6],
+      'WWTP': [20, 184, 166], 'Police Department': [99, 102, 241], 'Fire Department': [220, 38, 38],
+      'Buildings': [192, 38, 211], 'Other': [100, 116, 139]
+    };
+
+    const PRIORITY = {
+      'var(--row-red)':    { label: 'Urgent',    rgb: [200, 30, 55] },
+      'var(--row-yellow)': { label: 'Waiting',   rgb: [202, 138, 4] },
+      'var(--row-green)':  { label: 'On Track',  rgb: [22, 163, 74] },
+      'var(--row-blue)':   { label: 'Scheduled', rgb: [37, 99, 235] },
+      'var(--row-purple)': { label: 'Review',    rgb: [124, 58, 237] }
+    };
+
+    const reportModal = document.getElementById('reportModal');
+    let pdfLibPromise = null;
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const el = document.createElement('script');
+        el.src = src;
+        el.onload = resolve;
+        el.onerror = () => reject(new Error('Could not load ' + src));
+        document.head.appendChild(el);
+      });
+    }
+
+    function loadPdfLibs() {
+      if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API.autoTable) return Promise.resolve();
+      if (!pdfLibPromise) {
+        pdfLibPromise = loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+          .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'))
+          .catch(err => { pdfLibPromise = null; throw err; });
+      }
+      return pdfLibPromise;
+    }
+
+    function reportScope() {
+      return (reportModal.querySelector('input[name="reportScope"]:checked') || {}).value || 'active';
+    }
+
+    function ordersForScope(scope) {
+      return workOrders.filter(o => scope === 'all' ? true : scope === 'archived' ? o.archived : !o.archived);
+    }
+
+    function updateReportCounts() {
+      const orders = ordersForScope(reportScope());
+      REPORT_GROUPS.forEach(g => {
+        const n = orders.filter(o => g.match(o.type)).length;
+        reportModal.querySelector(`[data-count="${g.key}"]`).textContent = `${n} work order${n === 1 ? '' : 's'}`;
+      });
+    }
+
+    function openReportModal() {
+      loadPdfLibs().catch(() => {});   // warm up the PDF library in the background
+      updateReportCounts();
+      document.getElementById('reportHint').textContent = isDirty ? 'Includes unsaved changes' : '';
+      reportModal.classList.add('open');
+      reportModal.setAttribute('aria-hidden', 'false');
+      overlay.classList.add('open');
+      reportModal.querySelector('[data-report]').focus();
+    }
+
+    function closeReportModal() {
+      if (!reportModal.classList.contains('open')) return;
+      reportModal.classList.remove('open');
+      reportModal.setAttribute('aria-hidden', 'true');
+      if (!drawer.classList.contains('open')) overlay.classList.remove('open');
+    }
+
+    function sortForReport(list) {
+      const rank = o => o.archived ? 2 : o.rowColor === 'var(--row-red)' ? 0 : 1;
+      return list.slice().sort((a, b) =>
+        rank(a) - rank(b) || String(b.date).localeCompare(String(a.date)) || a.id - b.id);
+    }
+
+    function buildSupervisorPdf(groups, scope) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
+      const M = 36;
+      const NAVY = [10, 16, 32];
+      const INK = [24, 32, 44];
+      const MUTED = [100, 112, 128];
+      const now = new Date();
+      const stamp = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
+        ' at ' + now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const scopeLabel = { active: 'Active work orders', archived: 'Completed work orders', all: 'All work orders' }[scope];
+      const pageGroup = {};   // page number -> group, so the running header knows which division it is in
+
+      function drawBand(group, continued) {
+        doc.setFillColor(...NAVY);
+        doc.rect(0, 0, W, 64, 'F');
+        // division accent stripe
+        if (group.color2) {
+          doc.setFillColor(...group.color); doc.rect(0, 64, W / 2, 5, 'F');
+          doc.setFillColor(...group.color2); doc.rect(W / 2, 64, W / 2, 5, 'F');
+        } else {
+          doc.setFillColor(...group.color); doc.rect(0, 64, W, 5, 'F');
+        }
+        doc.setTextColor(255, 217, 77);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+        doc.text('PUBLIC WORKS  ·  SUPERVISOR REPORT', M, 24);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text(group.title + (continued ? '  (continued)' : ''), M, 48);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+        doc.setTextColor(190, 204, 224);
+        doc.text(scopeLabel, W - M, 26, { align: 'right' });
+        doc.text('Generated ' + stamp, W - M, 42, { align: 'right' });
+      }
+
+      function statBox(x, y, w, label, value, rgb) {
+        doc.setFillColor(244, 247, 251);
+        doc.roundedRect(x, y, w, 46, 4, 4, 'F');
+        doc.setFillColor(...rgb);
+        doc.rect(x, y, 4, 46, 'F');
+        doc.setTextColor(...MUTED); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+        doc.text(label.toUpperCase(), x + 14, y + 16);
+        doc.setTextColor(...INK); doc.setFontSize(18);
+        doc.text(String(value), x + 14, y + 38);
+      }
+
+      groups.forEach((group, gi) => {
+        if (gi > 0) doc.addPage();
+        pageGroup[doc.internal.getNumberOfPages()] = { group, first: true };
+        const rows = sortForReport(ordersForScope(scope).filter(o => group.match(o.type)));
+        drawBand(group, false);
+
+        // subtitle + summary
+        doc.setTextColor(...MUTED); doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+        doc.text(group.subtitle, M, 92);
+
+        const open = rows.filter(o => !o.archived).length;
+        const done = rows.filter(o => o.archived).length;
+        const urgent = rows.filter(o => !o.archived && o.rowColor === 'var(--row-red)').length;
+        const openDates = rows.filter(o => !o.archived && /^\d{4}-\d{2}-\d{2}$/.test(o.date || '')).map(o => new Date(o.date + 'T00:00:00'));
+        const oldestDays = openDates.length ? Math.max(0, Math.floor((now - Math.min(...openDates)) / 86400000)) : null;
+        const oldestLabel = oldestDays == null ? '\u2014' : oldestDays + (oldestDays === 1 ? ' day' : ' days');
+        const gap = 12, bw = (W - 2 * M - 4 * gap) / 5;
+        [
+          ['Total', rows.length, group.color],
+          ['Open', open, [37, 99, 235]],
+          ['Completed', done, [22, 163, 74]],
+          ['Urgent', urgent, [200, 30, 55]],
+          ['Oldest Open', oldestLabel, [202, 138, 4]]
+        ].forEach(([label, v, rgb], i) => statBox(M + i * (bw + gap), 104, bw, label, v, rgb));
+
+        if (!rows.length) {
+          doc.setDrawColor(210, 218, 228); doc.setLineDashPattern([4, 3], 0);
+          doc.roundedRect(M, 172, W - 2 * M, 70, 6, 6, 'S');
+          doc.setLineDashPattern([], 0);
+          doc.setTextColor(...MUTED); doc.setFontSize(12);
+          doc.text(`No ${scopeLabel.toLowerCase()} in ${group.title}.`, W / 2, 212, { align: 'center' });
+          return;
+        }
+
+        const body = rows.map(o => [
+          'WO-' + String(o.id).padStart(4, '0'),
+          o.type || 'Other',
+          o.issue || '',
+          o.location || '—',
+          formatDate(o.date) || '—',
+          o.number811 || '—',
+          (o.archived ? 'Completed' : (o.status || 'Open')),
+          o.notes || ''
+        ]);
+
+        doc.autoTable({
+          startY: 166,
+          margin: { top: 88, left: M, right: M, bottom: 40 },
+          head: [['WO #', 'Type', 'Issue', 'Location', 'Date', '811 #', 'Status', 'Notes']],
+          body,
+          theme: 'plain',
+          rowPageBreak: 'avoid',
+          styles: { font: 'helvetica', fontSize: 8.5, textColor: INK, cellPadding: { top: 6, bottom: 6, left: 6, right: 6 },
+                    lineColor: [226, 232, 240], lineWidth: { bottom: 0.6 }, valign: 'top', overflow: 'linebreak' },
+          headStyles: { fillColor: [29, 52, 71], textColor: 255, fontStyle: 'bold', fontSize: 7.5, lineWidth: 0 },
+          alternateRowStyles: { fillColor: [247, 250, 252] },
+          columnStyles: {
+            0: { cellWidth: 52, fontStyle: 'bold' },
+            1: { cellWidth: 74 },
+            2: { cellWidth: 118, fontStyle: 'bold' },
+            3: { cellWidth: 104 },
+            4: { cellWidth: 50 },
+            5: { cellWidth: 70 },
+            6: { cellWidth: 74 },
+            7: { cellWidth: 'auto', textColor: [52, 66, 79] }
+          },
+          didParseCell: data => {
+            if (data.section !== 'body') return;
+            if (data.column.index === 1 || data.column.index === 6) data.cell.styles.textColor = [255, 255, 255]; // drawn as pills
+          },
+          didDrawCell: data => {
+            if (data.section !== 'body') return;
+            const o = rows[data.row.index];
+            const c = data.cell;
+            if (data.column.index === 0) {
+              const pr = PRIORITY[o.rowColor];
+              doc.setFillColor(...(pr ? pr.rgb : [203, 213, 225]));
+              doc.rect(c.x, c.y, 3, c.height, 'F');
+            }
+            if (data.column.index === 1 || data.column.index === 6) {
+              let label, rgb;
+              if (data.column.index === 1) { label = o.type === 'Police Department' ? 'Police' : o.type === 'Fire Department' ? 'Fire' : (o.type || 'Other'); rgb = TYPE_RGB[o.type] || TYPE_RGB.Other; }
+              else {
+                label = String(c.raw).slice(0, 14);
+                const pr = PRIORITY[o.rowColor];
+                rgb = o.archived ? [22, 163, 74] : pr ? pr.rgb : /open/i.test(label) ? [37, 99, 235] : [100, 116, 139];
+              }
+              doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+              const tw = Math.min(doc.getTextWidth(label) + 12, c.width - 8);
+              const px = c.x + 5, py = c.y + 5;
+              doc.setFillColor(rgb[0] + (255 - rgb[0]) * 0.85, rgb[1] + (255 - rgb[1]) * 0.85, rgb[2] + (255 - rgb[2]) * 0.85);
+              doc.roundedRect(px, py, tw, 13, 6.5, 6.5, 'F');
+              doc.setTextColor(rgb[0] * 0.65, rgb[1] * 0.65, rgb[2] * 0.65);
+              doc.text(label, px + 6, py + 9.3, { maxWidth: tw - 10 });
+              if (data.column.index === 6) {
+                const pr = PRIORITY[o.rowColor];
+                if (pr && !o.archived && pr.label.toLowerCase() !== label.toLowerCase()) {
+                  doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUTED); doc.setFontSize(7);
+                  doc.text(pr.label, px + 1, py + 24);
+                }
+              }
+            }
+          },
+          didDrawPage: data => {
+            const n = doc.internal.getNumberOfPages();
+            if (!pageGroup[n]) { pageGroup[n] = { group, first: false }; drawBand(group, true); }
+          }
+        });
+      });
+
+      // footers with page numbers (drawn last so totals are known)
+      const total = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= total; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.6);
+        doc.line(M, H - 28, W - M, H - 28);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+        const g = pageGroup[i] ? pageGroup[i].group.title : '';
+        doc.text(`${g} Work Order Report  ·  Supervisor Copy`, M, H - 15);
+        doc.text(`Page ${i} of ${total}`, W - M, H - 15, { align: 'right' });
+        if (i === 1) {
+          // legend for priority stripe
+          let x = W / 2 - 150;
+          doc.setFontSize(7);
+          Object.values(PRIORITY).forEach(p => {
+            doc.setFillColor(...p.rgb); doc.rect(x, H - 21, 6, 6, 'F');
+            doc.setTextColor(...MUTED); doc.text(p.label, x + 9, H - 16);
+            x += 60;
+          });
+        }
+      }
+      return doc;
+    }
+
+    const REPORT_FILE_NAMES = { watersewer: 'Water-Sewer', streets: 'Streets', admin: 'Admin' };
+
+    async function downloadSupervisorPdf(key, btn) {
+      const group = REPORT_GROUPS.find(g => g.key === key);
+      if (!group) return;
+      const scope = reportScope();
+      const original = btn.textContent;
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Building…';
+        await loadPdfLibs();
+        const doc = buildSupervisorPdf([group], scope);
+        const d = new Date();
+        const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const scopeTag = scope === 'active' ? '' : scope === 'archived' ? '-Completed' : '-All';
+        doc.save(`${REPORT_FILE_NAMES[key]}-Work-Orders${scopeTag}-${ymd}.pdf`);
+        setStatus(`${group.title} PDF downloaded`, 'ok');
+      } catch (error) {
+        console.error('PDF export failed:', error);
+        alert('Could not build the PDF. Check the internet connection (the PDF tool loads from cdnjs) and try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    }
+
+    document.getElementById('supervisorPdfBtn').addEventListener('click', openReportModal);
+    document.getElementById('reportCancelBtn').addEventListener('click', closeReportModal);
+    reportModal.querySelectorAll('[data-report]').forEach(btn =>
+      btn.addEventListener('click', () => downloadSupervisorPdf(btn.dataset.report, btn)));
+    reportModal.querySelectorAll('input[name="reportScope"]').forEach(r => r.addEventListener('change', updateReportCounts));
+
+    /* ---------- Event wiring ---------- */
+
+    typeFilter.addEventListener('change', () => {
+      currentFilter = typeFilter.value;
+      renderTable();
+    });
+
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value.toLowerCase().trim();
+      renderTable();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', exportData);
+
+    document.getElementById('importFile').addEventListener('change', (event) => {
+      importData(event.target.files[0]);
+      event.target.value = '';
+    });
+
+    document.getElementById('newOrderBtn').addEventListener('click', () => {
+      const nextId = workOrders.length ? Math.max(...workOrders.map(item => item.id)) + 1 : 1;
+      workOrders.unshift({
+        id: nextId,
+        type: 'Water',
+        issue: 'New work order',
+        location: '',
+        date: new Date().toISOString().slice(0, 10),
+        number811: '',
+        status: 'Open',
+        notes: '',
+        rowColor: '',
+        archived: false
+      });
+      selectedId = nextId;
+      markDirty();
+      renderTable();
+      openDrawer(nextId);
+    });
+
+    document.getElementById('archiveToggleBtn').addEventListener('click', () => {
+      showArchive = !showArchive;
+      const btn = document.getElementById('archiveToggleBtn');
+      btn.classList.toggle('active', showArchive);
+      btn.textContent = showArchive ? 'Show Active' : 'Show Archive';
+      btn.setAttribute('aria-pressed', String(showArchive));
+      selectedId = null;
+      renderTable();
+    });
+
+    document.getElementById('clearColorsBtn').addEventListener('click', () => {
+      if (!selectedId) return;
+      const item = workOrders.find(entry => entry.id === selectedId);
+      if (!item) return;
+      item.rowColor = '';
+      markDirty();
+      renderTable();
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', saveCurrentEdit);
+    document.getElementById('cancelBtn').addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', () => { closeReportModal(); closeDrawer(); });
+
+    contextMenu.querySelectorAll('[data-color]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (contextRowId == null) return;
+        const item = workOrders.find(entry => entry.id === contextRowId);
+        if (!item) return;
+        item.rowColor = button.dataset.color;
+        closeContextMenu();
+        markDirty();
+        renderTable();
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!contextMenu.contains(event.target)) closeContextMenu();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeContextMenu();
+        if (reportModal.classList.contains('open')) { closeReportModal(); return; }
+        closeDrawer();
+      }
+    });
+
+    saveDatabaseBtn.addEventListener('click', async () => {
+      try {
+        saveDatabaseBtn.disabled = true;
+        saveDatabaseBtn.textContent = 'Saving…';
+        await saveToApi();
+      } catch (error) {
+        setStatus('Save failed — is app.py running?', 'error');
+        alert(`Save failed: ${error.message}`);
+      } finally {
+        saveDatabaseBtn.disabled = false;
+        saveDatabaseBtn.textContent = 'Save to Database';
+      }
+    });
+
+    renderTable();
+    loadFromApi();
+  </script>
+</body>
+</html>
